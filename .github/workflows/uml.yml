@@ -45,5 +45,5 @@ jobs:
           else
             echo "Committing the changes"
             git commit -m "Update UML Diagrams"
-            git push origin HEAD:${GITHUB_HEAD_REF}
+            git push
           fi
