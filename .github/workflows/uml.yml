@@ -9,8 +9,10 @@ on:
     branches: [main]
     paths:
       - "pymc_marketing/**"
-
-permissions: write-all
+  pull_request_target:
+    branches: [main]
+    paths:
+      - "pymc_marketing/**"
 
 jobs:
   build:
@@ -45,5 +47,3 @@ jobs:
             git commit -m "Update UML Diagrams"
             git push origin HEAD:${GITHUB_HEAD_REF}
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
