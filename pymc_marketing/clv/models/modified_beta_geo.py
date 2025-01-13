@@ -130,7 +130,10 @@ class ModifiedBetaGeoModel(BetaGeoModel):
 
     def build_model(self) -> None:  # type: ignore[override]
         """Build the model."""
-        coords = {"customer_id": self.data["customer_id"]}
+        coords = {
+            "customer_id": self.data["customer_id"],
+            "obs_var": ["recency", "frequency"],
+        }
         with pm.Model(coords=coords) as self.model:
             # purchase rate priors
             alpha = self.model_config["alpha_prior"].create_variable("alpha")

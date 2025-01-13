@@ -429,7 +429,7 @@ class TestModifiedBetaGeoModel:
             "\nr~HalfFlat()"
             "\na~HalfFlat()"
             "\nb~HalfNormal(0,10)"
-            "\nlikelihood~Potential(f(r,alpha,b,a))"
+            "\nrecency_frequency~ModifiedBetaGeoNBD(a,b,r,alpha,<constant>)"
         )
 
     def test_distribution_new_customer(self) -> None:
