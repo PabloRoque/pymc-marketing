@@ -168,46 +168,6 @@ class ModifiedBetaGeoModel(BetaGeoModel):
                 dims=["customer_id", "obs_var"],
             )
 
-            # def logp(t_x, x, a, b, r, alpha, T):
-            #     """Compute the log-likelihood of the MBG/NBD model."""
-            #     a1 = pt.gammaln(r + x) - pt.gammaln(r) + r * pt.log(alpha)
-            #     a2 = (
-            #         pt.gammaln(a + b)
-            #         + pt.gammaln(b + x + 1)
-            #         - pt.gammaln(b)
-            #         - pt.gammaln(a + b + x + 1)
-            #     )
-            #     a3 = -(r + x) * pt.log(alpha + T)
-            #     a4 = (
-            #         pt.log(a)
-            #         - pt.log(b + x)
-            #         + (r + x) * (pt.log(alpha + T) - pt.log(alpha + t_x))
-            #     )
-
-            #     logp = a1 + a2 + a3 + pt.logaddexp(a4, 0)
-
-            #     return check_parameters(
-            #         logp,
-            #         a > 0,
-            #         b > 0,
-            #         alpha > 0,
-            #         r > 0,
-            #         msg="a, b, alpha, r > 0",
-            #     )
-
-            # pm.Potential(
-            #     "likelihood",
-            #     logp(
-            #         x=self.data["frequency"],
-            #         t_x=self.data["recency"],
-            #         a=a,
-            #         b=b,
-            #         alpha=alpha,
-            #         r=r,
-            #         T=self.data["T"],
-            #     ),
-            # )
-
     def expected_num_purchases(
         self,
         customer_id: np.ndarray | pd.Series,

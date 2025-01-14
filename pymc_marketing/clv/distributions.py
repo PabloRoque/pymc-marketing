@@ -634,7 +634,7 @@ class BetaGeoNBDRV(RandomVariable):
             t = 0  # recency
             n = 0  # frequency
 
-            churn = 0  # BG/NBD assumes all non-repeat customers are active
+            churn = p  # probability that the customer has churned at time zero
             wait = rng.exponential(scale=1 / lam)
 
             while t + wait < T and not churn:
@@ -782,7 +782,7 @@ class ModifiedBetaGeoNBDRV(RandomVariable):
             t = 0  # recency
             n = 0  # frequency
 
-            churn = 0  # BG/NBD assumes all non-repeat customers are active
+            churn = p  # MBG/NBD customer active with probability p at time 0
             wait = rng.exponential(scale=1 / lam)
 
             while t + wait < T and not churn:
@@ -805,17 +805,17 @@ mbg_nbd = ModifiedBetaGeoNBDRV()
 class ModifiedBetaGeoNBD(PositiveContinuous):
     r"""Population-level distribution class for a discrete, non-contractual, Modified-Beta-Geometric/Negative-Binomial process.
 
-    It is based on Fader, et al. in [1]_, [2]_ and [3]_.
+    Based on Batislam et al. in [1]_, and Wagner et al. in [2]_ .
 
     .. math::
 
-        \mathbb{LL}(r, \alpha, a, b  | x, t_x, T) =
-        D_1 + D_2 + \ln(C_3 + \delta_{x>0} C_4) \text{, where:} \\
+        \mathbb{LL}(a, b, \alpha, r | x, t_x, T) = \ln \left[
+        A_1 * A_2 * (A_3 + \delta_{x>0} A_4) \right] \text{, where:} \\
         \begin{align}
-        D_1 &= \ln \left[ \Gamma(r+x) \right] - \ln \left[ \Gamma(r) \right] + \ln \left[ \Gamma(a+b) \right] + \ln \left[ \Gamma(b+x) \right] \\
-        D_2 &= r \ln(\alpha) - (r+x) \ln(\alpha + t_x) \\
-        C_3 &= \left(\frac{\alpha + t_x}{\alpha + T} \right)^{r+x} \\
-        C_4 &= \left(\frac{a}{b+x-1} \right) \\
+        A_1 &= \frac{\Gamma(r+x) \alpha^r)}{\Gamma(x)} \\
+        A_2 &= \frac{\Gamma(a+b) \Gamma(b+x+1)}{\Gamma(b) \Gamma(a+b+x+1)} \\
+        A_3 &= \left( \frac{1}{\alpha + T} \right)^(r+x) \\
+        A_4 &= \left( \frac{a}{b+x} \right) \left( \frac{1}{\alpha + t_x} \right)^(r+x) \\
         \end{align}
 
     ========  ===============================================
@@ -825,12 +825,12 @@ class ModifiedBetaGeoNBD(PositiveContinuous):
 
     References
     ----------
-    .. [1] Fader, Peter S., Bruce G.S. Hardie, and Jen Shang (2010),
-       "Counting Your Customers" the Easy Way: An Alternative to the Pareto/NBD Model
-       Marketing Science, 24 (Spring), 275-284
-
-    .. [2] Implementing the BG/NBD Model for Customer Base Analysis in Excel http://brucehardie.com/notes/004/bgnbd_spreadsheet_note.pdf
-    .. [3] Overcoming the BG/NBD Model's #NUM! Error Problem https://brucehardie.com/notes/027/bgnbd_num_error.pdf
+    .. [1] Batislam, E.P., M. Denizel, A. Filiztekin (2007),
+       "Empirical validation and comparison of models for customer base
+       analysis,"
+       International Journal of Research in Marketing, 24 (3), 201-209.
+    .. [2] Wagner, U. and Hoppe D. (2008), "Erratum on the MBG/NBD Model,"
+       International Journal of Research in Marketing, 25 (3), 225-226.
 
     """  # noqa: E501
 
