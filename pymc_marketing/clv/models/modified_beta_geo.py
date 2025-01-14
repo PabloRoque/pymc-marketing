@@ -15,6 +15,7 @@
 
 import warnings
 from collections.abc import Sequence
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -376,27 +377,56 @@ class ModifiedBetaGeoModel(BetaGeoModel):
         *,
         T: int | np.ndarray | pd.Series | None = None,
         random_seed: RandomState | None = None,
-        var_names: Sequence[str] = ("dropout", "purchase_rate"),
+        var_names: Sequence[
+            Literal["dropout", "purchase_rate", "recency_frequency"]
+        ] = ("dropout", "purchase_rate", "recency_frequency"),
         n_samples: int = 1000,
     ) -> xarray.Dataset:
-        # TODO: This is extraneous now, until a new distribution block is added.
-        """Compute posterior predictive samples of dropout, purchase rate and frequency/recency of new customers."""
+        """Compute posterior predictive samples of dropout, purchase rate and frequency/recency of new customers.
+
+        In a model with covariates, if `data` is not specified, the dataset used for fitting will be used and
+        a prediction will be computed for a *new customer* with each set of covariates.
+        *This is not a conditional prediction for observed customers!*
+
+        Parameters
+        ----------
+        data : ~pandas.DataFrame, Optional
+            DataFrame containing the following columns:
+
+            * `customer_id`: Unique customer identifier
+            * `T`: Time between the first purchase and the end of the observation period
+
+            If not provided, predictions will be ran with data used to fit model.
+        T : array_like, optional
+            time between the first purchase and the end of the observation period.
+            Not needed if `data` parameter is provided with a `T` column.
+        random_seed : ~numpy.random.RandomState, optional
+            Random state to use for sampling.
+        var_names : sequence of str, optional
+            Names of the variables to sample from. Defaults to ["dropout", "purchase_rate", "recency_frequency"].
+        n_samples : int, optional
+            Number of samples to generate. Defaults to 1000
+
+        """
         if data is None:
             data = self.data
 
         if T is not None:
-            dataset = data.assign(T=T)
+            data = data.assign(T=T)
 
         dataset = self._extract_predictive_variables(data, customer_varnames=["T"])
-        T = dataset["T"].values  # type: ignore
+        T = dataset["T"].values
         # Delete "T" so we can pass dataset directly to `sample_posterior_predictive`
         del dataset["T"]
 
         if dataset.sizes["chain"] == 1 and dataset.sizes["draw"] == 1:
             # For map fit add a dummy draw dimension
-            dataset = dataset.squeeze("draw").expand_dims(draw=range(n_samples))  # type: ignore
+            dataset = dataset.squeeze("draw").expand_dims(draw=range(n_samples))
 
-        with pm.Model():
+        coords = self.model.coords.copy()  # type: ignore
+        coords["customer_id"] = data["customer_id"]
+
+        with pm.Model(coords=coords):
             a = pm.HalfFlat("a")
             b = pm.HalfFlat("b")
             alpha = pm.HalfFlat("alpha")
@@ -405,8 +435,19 @@ class ModifiedBetaGeoModel(BetaGeoModel):
             pm.Beta("dropout", alpha=a, beta=b)
             pm.Gamma("purchase_rate", alpha=r, beta=alpha)
 
+            ModifiedBetaGeoNBD(
+                name="recency_frequency",
+                a=a,
+                b=b,
+                r=r,
+                alpha=alpha,
+                T=T,
+                dims=["customer_id", "obs_var"],
+            )
+
             return pm.sample_posterior_predictive(
                 dataset,
                 var_names=var_names,
                 random_seed=random_seed,
-            ).posterior_predictive
+                predictions=True,
+            ).predictions
