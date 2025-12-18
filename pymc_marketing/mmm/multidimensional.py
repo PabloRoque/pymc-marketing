@@ -549,7 +549,63 @@ class MMM(RegressionModelBuilder):
         attrs["treatment_nodes"] = json.dumps(getattr(self, "treatment_nodes", None))
         attrs["outcome_node"] = json.dumps(getattr(self, "outcome_node", None))
 
+        # Serialize mu_effects metadata
+        mu_effects_list = []
+        for effect in self.mu_effects:
+            effect_data = self._serialize_mu_effect(effect)
+            mu_effects_list.append(effect_data)
+        attrs["mu_effects"] = json.dumps(mu_effects_list)
+
         return attrs
+
+    @staticmethod
+    def _serialize_mu_effect(effect: MuEffect) -> dict[str, Any]:
+        """Serialize a MuEffect instance to JSON-compatible dictionary.
+
+        Uses Pydantic model_dump with field exclusion to handle non-JSON-serializable
+        attributes like DataFrame, Prior objects, and PyMC/PyTensor types.
+        For complex nested objects, delegates to their custom serialization methods.
+
+        Parameters
+        ----------
+        effect : MuEffect
+            The effect to serialize (all effects inherit from MuEffect base class).
+
+        Returns
+        -------
+        dict[str, Any]
+            JSON-compatible dictionary with effect metadata.
+
+        """
+        from pymc_marketing.mmm.additive_effect import (
+            EventAdditiveEffect,
+            FourierEffect,
+            LinearTrendEffect,
+        )
+
+        # Start with effect class name
+        dumped = {"class": effect.__class__.__name__}
+
+        # Serialize based on effect type
+        if isinstance(effect, FourierEffect):
+            # Use FourierBase.to_dict() which handles serialization properly
+            dumped["fourier"] = effect.fourier.to_dict()
+            dumped["date_dim_name"] = effect.date_dim_name
+        elif isinstance(effect, LinearTrendEffect):
+            # Serialize trend without priors - they contain Prior objects
+            dumped["trend"] = effect.trend.model_dump(mode="python", exclude={"priors"})
+            dumped["prefix"] = effect.prefix
+            dumped["date_dim_name"] = effect.date_dim_name
+        elif isinstance(effect, EventAdditiveEffect):
+            # Exclude non-serializable fields: df_events and effect
+            event_data = effect.model_dump(
+                mode="python", exclude={"df_events", "effect"}
+            )
+            dumped.update(event_data)
+            # Include event names from df_events for reference
+            dumped["event_names"] = list(effect.df_events["name"].values)
+
+        return dumped
 
     @classmethod
     def _model_config_formatting(cls, model_config: dict) -> dict:
