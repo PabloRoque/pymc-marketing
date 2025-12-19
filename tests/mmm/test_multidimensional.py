@@ -124,6 +124,48 @@ def test_save_load(fit_mmm: MMM):
     assert isinstance(loaded, MMM)
 
 
+def test_save_load_equality(fit_mmm: MMM):
+    """Test that save/load produces an equivalent MMM instance.
+
+    Tests the __eq__ method which validates ALL configuration aspects:
+    - Core configuration (date, channels, target, dims, scaling)
+    - Transformations (adstock, saturation, adstock_first)
+    - Time-varying effects (HSGPs if present)
+    - Additive effects (mu_effects)
+    - Causal graph configuration
+    - Model and sampler configuration
+    """
+    file = "test_equality.nc"
+    original_mmm = fit_mmm
+
+    # Save the model
+    original_mmm.save(file)
+
+    # Load the model
+    loaded_mmm = MMM.load(file)
+
+    # Test that loaded model equals original (using __eq__)
+    assert loaded_mmm == original_mmm, (
+        "Loaded MMM should be equal to original. "
+        "Check __eq__ method for which properties don't match."
+    )
+
+    # Also verify key properties individually
+    assert loaded_mmm.id == original_mmm.id
+    assert loaded_mmm.date_column == original_mmm.date_column
+    assert loaded_mmm.channel_columns == original_mmm.channel_columns
+    assert loaded_mmm.target_column == original_mmm.target_column
+    assert loaded_mmm.dims == original_mmm.dims
+    assert loaded_mmm.adstock_first == original_mmm.adstock_first
+    assert loaded_mmm.yearly_seasonality == original_mmm.yearly_seasonality
+    assert loaded_mmm.sampler_config == original_mmm.sampler_config
+
+    # Clean up
+    import os
+
+    os.remove(file)
+
+
 @pytest.fixture
 def single_dim_data():
     """

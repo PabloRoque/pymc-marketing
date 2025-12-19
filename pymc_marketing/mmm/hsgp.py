@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from enum import Enum
-from typing import Literal, Self, cast
+from typing import Any, Literal, Self, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -26,13 +26,21 @@ import pytensor.tensor as pt
 import xarray as xr
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-from pydantic import BaseModel, Field, InstanceOf, model_validator, validate_call
+from pydantic import (
+    BaseModel,
+    Field,
+    InstanceOf,
+    field_serializer,
+    model_validator,
+    validate_call,
+)
 from pymc.distributions.shape_utils import Dims
-from pymc_extras.deserialize import register_deserialization
+from pymc_extras.deserialize import deserialize, register_deserialization
 from pymc_extras.prior import Prior, _get_transform, create_dim_handler
 from pytensor.tensor import TensorLike
 from pytensor.tensor.variable import TensorVariable
 
+from pymc_marketing.mmm.components.base import SerializableMixin
 from pymc_marketing.plot import SelToString, plot_curve
 
 
@@ -249,7 +257,7 @@ def create_m_and_L_recommendations(
     return m, L
 
 
-class HSGPBase(BaseModel):
+class HSGPBase(BaseModel, SerializableMixin):
     """Shared logic between HSGP and HSGPPeriodic."""
 
     m: int = Field(..., description="Number of basis functions")
@@ -337,22 +345,6 @@ class HSGPBase(BaseModel):
     def create_variable(self, name: str) -> TensorVariable:
         """Create a variable from configuration."""
         raise NotImplementedError
-
-    def to_dict(self) -> dict:
-        """Convert the object to a dictionary.
-
-        Returns
-        -------
-        dict
-            The object as a dictionary.
-
-        """
-        data = self.model_dump()
-
-        def handle_prior(value):
-            return value if not hasattr(value, "to_dict") else value.to_dict()
-
-        return {key: handle_prior(value) for key, value in data.items()}
 
     def sample_prior(
         self,
@@ -748,6 +740,23 @@ class HSGP(HSGPBase):
 
         return self
 
+    @field_serializer("eta", "ls", when_used="json")
+    def serialize_priors(self, value: Prior | float) -> dict | float:
+        """Serialize Prior objects to dicts, keep floats as-is.
+
+        Parameters
+        ----------
+        value : Prior | float
+            The field value to serialize.
+
+        Returns
+        -------
+        dict | float
+            Serialized Prior as dict or float unchanged.
+
+        """
+        return value.to_dict() if isinstance(value, Prior) else value
+
     @classmethod
     def parameterize_from_data(
         cls,
@@ -916,25 +925,43 @@ class HSGP(HSGPBase):
         return f
 
     @classmethod
-    def from_dict(cls, data) -> HSGP:
-        """Create an object from a dictionary.
+    def from_dict(cls, data: dict[str, Any], strict: bool = True) -> HSGP:
+        """Create an object from a dictionary in wrapped format.
 
         Parameters
         ----------
-        data : dict
-            The data to create the object from.
+        data : dict[str, Any]
+            The data to create the object from in wrapped format:
+            ``{"class": "HSGP", "data": {...}}``
+        strict : bool, optional
+            Reserved for future use. Default is True.
 
         Returns
         -------
         HSGP
             The object created from the data.
 
-        """
-        for key in ["eta", "ls"]:
-            if isinstance(data[key], dict):
-                data[key] = Prior.from_dict(data[key])
+        Raises
+        ------
+        ValueError
+            If data is not in wrapped format with "class" and "data" keys.
 
-        return cls(**data)
+        """
+        if "class" not in data or "data" not in data:
+            raise ValueError(
+                f"Invalid serialization format. Expected wrapped format: "
+                f"{{'class': 'HSGP', 'data': {{...}}}}, but got: {data}"
+            )
+
+        inner_data = data["data"]
+
+        # Deserialize Prior fields if they are dicts
+        for key in ["eta", "ls"]:
+            if key in inner_data and isinstance(inner_data[key], dict):
+                inner_data = inner_data.copy()  # Don't mutate input
+                inner_data[key] = deserialize(inner_data[key])
+
+        return cls.model_validate(inner_data)
 
 
 class PeriodicCovFunc(str, Enum):
@@ -1172,6 +1199,23 @@ class HSGPPeriodic(HSGPBase):
 
         return self
 
+    @field_serializer("scale", "ls", when_used="json")
+    def serialize_priors(self, value: Prior | float) -> dict | float:
+        """Serialize Prior objects to dicts, keep floats as-is.
+
+        Parameters
+        ----------
+        value : Prior | float
+            The field value to serialize.
+
+        Returns
+        -------
+        dict | float
+            Serialized Prior as dict or float unchanged.
+
+        """
+        return value.to_dict() if isinstance(value, Prior) else value
+
     def create_variable(self, name: str) -> TensorVariable:
         """Create HSGP variable.
 
@@ -1261,25 +1305,43 @@ class HSGPPeriodic(HSGPBase):
         return f
 
     @classmethod
-    def from_dict(cls, data) -> HSGPPeriodic:
-        """Create an object from a dictionary.
+    def from_dict(cls, data: dict[str, Any], strict: bool = True) -> HSGPPeriodic:
+        """Create an object from a dictionary in wrapped format.
 
         Parameters
         ----------
-        data : dict
-            The data to create the object from.
+        data : dict[str, Any]
+            The data to create the object from in wrapped format:
+            ``{"class": "HSGPPeriodic", "data": {...}}``
+        strict : bool, optional
+            Reserved for future use. Default is True.
 
         Returns
         -------
         HSGPPeriodic
             The object created from the data.
 
-        """
-        for key in ["scale", "ls"]:
-            if isinstance(data[key], dict):
-                data[key] = Prior.from_dict(data[key])
+        Raises
+        ------
+        ValueError
+            If data is not in wrapped format with "class" and "data" keys.
 
-        return cls(**data)
+        """
+        if "class" not in data or "data" not in data:
+            raise ValueError(
+                f"Invalid serialization format. Expected wrapped format: "
+                f"{{'class': 'HSGPPeriodic', 'data': {{...}}}}, but got: {data}"
+            )
+
+        inner_data = data["data"]
+
+        # Deserialize Prior fields if they are dicts
+        for key in ["scale", "ls"]:
+            if key in inner_data and isinstance(inner_data[key], dict):
+                inner_data = inner_data.copy()  # Don't mutate input
+                inner_data[key] = deserialize(inner_data[key])
+
+        return cls.model_validate(inner_data)
 
 
 class SoftPlusHSGP(HSGP):

@@ -581,6 +581,33 @@ def test_base_model_save_load(fitted_base_model_instance):
     temp.close()
 
 
+def test_model_id_is_deterministic_and_reproducible(fitted_base_model_instance):
+    """Test that model IDs are deterministic and independent of object memory addresses.
+
+    This ensures that:
+    1. Computing ID multiple times on same instance gives same result
+    2. Creating identical models separately produces same ID
+    3. ID is based on serializable config, not object memory addresses
+
+    This is critical for save/load roundtrips to verify model consistency.
+    """
+    # Same instance should produce same ID when computed multiple times
+    id1 = fitted_base_model_instance.id
+    id2 = fitted_base_model_instance.id
+    assert id1 == id2, "ID should be deterministic when computed multiple times"
+
+    # Save and load, then verify ID matches
+    temp = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False)
+    fitted_base_model_instance.save(temp.name)
+    loaded_model = ModelBuilderTest.load(temp.name)
+
+    assert loaded_model.id == fitted_base_model_instance.id, (
+        "Loaded model should have same ID as original. "
+        "Different IDs indicate serializable_model_config changed during save/load."
+    )
+    temp.close()
+
+
 def test_initial_build_and_fit(
     fitted_regression_model_instance, check_idata=True
 ) -> RegressionModelBuilder:

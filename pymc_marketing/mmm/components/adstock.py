@@ -30,9 +30,9 @@ Create a new adstock transformation:
 
 
     class MyAdstock(AdstockTransformation):
-        lookup_name: str = "my_adstock"
+        lookup_name: str = "my_adstock"  # type: ignore[misc]
 
-        def function(self, x, alpha):
+        def function(self, x, alpha):  # type: ignore[misc]
             return x * alpha
 
         default_priors = {"alpha": Prior("HalfNormal", sigma=1)}
@@ -58,7 +58,7 @@ from __future__ import annotations
 import numpy as np
 import pytensor.tensor as pt
 import xarray as xr
-from pydantic import Field, validate_call
+from pydantic import Field, field_serializer
 from pymc_extras.deserialize import deserialize, register_deserialization
 from pymc_extras.prior import Prior
 
@@ -93,29 +93,50 @@ class AdstockTransformation(Transformation, metaclass=AdstockRegistrationMeta): 
 
     """
 
-    prefix: str = "adstock"
-    lookup_name: str
+    prefix: str = "adstock"  # type: ignore[misc]
+    lookup_name: str  # type: ignore[misc]
 
-    @validate_call
+    # Pydantic fields for adstock parameters
+    l_max: int = Field(
+        ..., gt=0, description="Maximum lag for the adstock transformation."
+    )
+    normalize: bool = Field(
+        True, description="Whether to normalize the adstock values."
+    )
+    mode: ConvMode = Field(ConvMode.After, description="Convolution mode.")
+
     def __init__(
         self,
-        l_max: int = Field(
-            ..., gt=0, description="Maximum lag for the adstock transformation."
-        ),
-        normalize: bool = Field(
-            True, description="Whether to normalize the adstock values."
-        ),
-        mode: ConvMode = Field(ConvMode.After, description="Convolution mode."),
-        priors: dict[str, SupportedPrior] | None = Field(
-            default=None, description="Priors for the parameters."
-        ),
-        prefix: str | None = Field(None, description="Prefix for the parameters."),
+        l_max: int,
+        normalize: bool = True,
+        mode: ConvMode = ConvMode.After,
+        priors: dict[str, SupportedPrior] | None = None,
+        prefix: str | None = None,
     ) -> None:
-        self.l_max = l_max
-        self.normalize = normalize
-        self.mode = mode
+        super().__init__(
+            l_max=l_max,
+            normalize=normalize,
+            mode=mode,
+            priors=priors,
+            prefix=prefix,
+        )
 
-        super().__init__(priors=priors, prefix=prefix)
+    @field_serializer("mode", when_used="json")
+    def serialize_mode(self, value: ConvMode) -> str:
+        """Serialize ConvMode enum to string.
+
+        Parameters
+        ----------
+        value : ConvMode
+            The convolution mode.
+
+        Returns
+        -------
+        str
+            The mode as a string.
+
+        """
+        return value.name
 
     def __repr__(self) -> str:
         """Representation of the adstock transformation."""
@@ -196,9 +217,9 @@ class BinomialAdstock(AdstockTransformation):
 
     """
 
-    lookup_name = "binomial"
+    lookup_name = "binomial"  # type: ignore[misc]
 
-    def function(self, x, alpha):
+    def function(self, x, alpha):  # type: ignore[misc]
         """Binomial adstock function."""
         return binomial_adstock(
             x, alpha=alpha, l_max=self.l_max, normalize=self.normalize, mode=self.mode
@@ -229,9 +250,9 @@ class GeometricAdstock(AdstockTransformation):
 
     """
 
-    lookup_name = "geometric"
+    lookup_name = "geometric"  # type: ignore[misc]
 
-    def function(self, x, alpha):
+    def function(self, x, alpha):  # type: ignore[misc]
         """Geometric adstock function."""
         return geometric_adstock(
             x, alpha=alpha, l_max=self.l_max, normalize=self.normalize, mode=self.mode
@@ -262,9 +283,9 @@ class DelayedAdstock(AdstockTransformation):
 
     """
 
-    lookup_name = "delayed"
+    lookup_name = "delayed"  # type: ignore[misc]
 
-    def function(self, x, alpha, theta):
+    def function(self, x, alpha, theta):  # type: ignore[misc]
         """Delayed adstock function."""
         return delayed_adstock(
             x,
@@ -303,9 +324,9 @@ class WeibullPDFAdstock(AdstockTransformation):
 
     """
 
-    lookup_name = "weibull_pdf"
+    lookup_name = "weibull_pdf"  # type: ignore[misc]
 
-    def function(self, x, lam, k):
+    def function(self, x, lam, k):  # type: ignore[misc]
         """Weibull adstock function."""
         return weibull_adstock(
             x=x,
@@ -345,9 +366,9 @@ class WeibullCDFAdstock(AdstockTransformation):
 
     """
 
-    lookup_name = "weibull_cdf"
+    lookup_name = "weibull_cdf"  # type: ignore[misc]
 
-    def function(self, x, lam, k):
+    def function(self, x, lam, k):  # type: ignore[misc]
         """Weibull adstock function."""
         return weibull_adstock(
             x=x,
@@ -368,9 +389,9 @@ class WeibullCDFAdstock(AdstockTransformation):
 class NoAdstock(AdstockTransformation):
     """Wrapper around no adstock transformation."""
 
-    lookup_name: str = "no_adstock"
+    lookup_name: str = "no_adstock"  # type: ignore[misc]
 
-    def function(self, x):
+    def function(self, x):  # type: ignore[misc]
         """No adstock function."""
         return pt.as_tensor_variable(x)
 
@@ -384,7 +405,7 @@ class NoAdstock(AdstockTransformation):
 def adstock_from_dict(data: dict) -> AdstockTransformation:
     """Create an adstock transformation from a dictionary."""
     data = data.copy()
-    lookup_name = data.pop("lookup_name")
+    lookup_name = data.pop("lookup_name")  # type: ignore[misc]
     cls = ADSTOCK_TRANSFORMATIONS[lookup_name]
 
     if "priors" in data:

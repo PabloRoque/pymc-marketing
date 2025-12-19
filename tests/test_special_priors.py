@@ -485,3 +485,100 @@ def test_masked_prior_create_likelihood_active_branch_suffix_and_broadcast(
         # Active positions are finite and not all zeros (given our observed has non-zeros)
         assert np.all(np.isfinite(eval_y[mask_vals]))
         assert np.any(eval_y[mask_vals] != 0.0)
+
+
+def test_mmm_save_load_with_masked_prior(mock_pymc_sample):
+    """Test that MMM can save and load a model with MaskedPrior in saturation.
+
+    This tests the full roundtrip:
+    1. Create MMM with MaskedPrior
+    2. Build and fit the model
+    3. Save to file
+    4. Load from file
+    5. Verify model ID matches (ensures _serializable_model_config is consistent)
+    """
+    rng = np.random.default_rng(42)
+    n = 15
+    dates = pd.date_range("2024-01-01", periods=n, freq="W-MON")
+    countries = ["Colombia", "Venezuela"]
+
+    df_list = []
+    for c in countries:
+        df_list.append(
+            pd.DataFrame(
+                {
+                    "date": dates,
+                    "country": c,
+                    "C1": rng.integers(10, 30, n),
+                    "C2": rng.integers(5, 25, n),
+                    "control": rng.normal(0, 1, n),
+                }
+            )
+        )
+    X = pd.concat(df_list, ignore_index=True)
+    y = (
+        0.4 * X["C1"].values
+        + 0.2 * X["C2"].values
+        + 1.5 * X["control"].values
+        + (X["country"].values == "Colombia").astype(float) * 5
+        + rng.normal(0, 0.5, len(X))
+    )
+    y = pd.Series(y, name="y")
+
+    coords = {
+        "country": countries,
+        "channel": ["C1", "C2"],
+    }
+
+    # Create mask for saturation parameter
+    mask = xr.DataArray(
+        [[True, False], [True, True]], dims=["country", "channel"], coords=coords
+    )
+
+    mmm = MMM(
+        date_column="date",
+        channel_columns=["C1", "C2"],
+        control_columns=["control"],
+        target_column="y",
+        dims=("country",),
+        adstock=GeometricAdstock(l_max=2),
+        saturation=LogisticSaturation(
+            priors={
+                "lam": MaskedPrior(
+                    Prior("Gamma", mu=2, sigma=0.5, dims=("country", "channel")),
+                    mask=mask,
+                ),
+                "beta": Prior("Gamma", mu=3, sigma=0.5, dims=("country", "channel")),
+            }
+        ),
+    )
+
+    # Fit the model
+    mmm.fit(X, y, draws=10, tune=10, chains=1, random_seed=1, target_accept=0.8)
+
+    # Get the original model ID
+    original_id = mmm.id
+
+    # Save the model
+    mmm.save("test_mmm_masked_prior.nc")
+
+    # Load the model
+    loaded_mmm = MMM.load("test_mmm_masked_prior.nc")
+
+    # Verify the loaded model has the same ID
+    assert loaded_mmm.id == original_id, (
+        f"Model ID mismatch: original={original_id}, loaded={loaded_mmm.id}. "
+        "This indicates the serializable_model_config changed during save/load."
+    )
+
+    # Verify other properties are preserved
+    assert loaded_mmm.date_column == mmm.date_column
+    assert loaded_mmm.dims == mmm.dims
+    assert loaded_mmm.adstock.l_max == mmm.adstock.l_max
+    assert loaded_mmm.channel_columns == mmm.channel_columns
+    assert loaded_mmm.control_columns == mmm.control_columns
+
+    # Clean up
+    import os
+
+    os.remove("test_mmm_masked_prior.nc")

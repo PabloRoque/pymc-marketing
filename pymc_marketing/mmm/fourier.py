@@ -252,12 +252,14 @@ from pydantic import (
     Field,
     InstanceOf,
     field_serializer,
+    field_validator,
     model_validator,
 )
 from pymc_extras.deserialize import deserialize, register_deserialization
 from pymc_extras.prior import Prior, VariableFactory, create_dim_handler
 
 from pymc_marketing.constants import DAYS_IN_MONTH, DAYS_IN_WEEK, DAYS_IN_YEAR
+from pymc_marketing.mmm.components.base import SerializableMixin
 from pymc_marketing.plot import SelToString, plot_curve, plot_hdi, plot_samples
 
 X_NAME: str = "day"
@@ -297,7 +299,7 @@ def generate_fourier_modes(
     )
 
 
-class FourierBase(BaseModel):
+class FourierBase(BaseModel, SerializableMixin):
     """Base class for Fourier seasonality transformations.
 
     Parameters
@@ -366,6 +368,30 @@ class FourierBase(BaseModel):
 
         """
         return prior.to_dict()
+
+    @field_validator("prior", mode="before")
+    @classmethod
+    def validate_prior(cls, v: Any) -> Prior | VariableFactory:
+        """Deserialize Prior dict to Prior object during validation.
+
+        Parameters
+        ----------
+        v : Any
+            The value to validate. Can be a Prior, VariableFactory, or dict.
+
+        Returns
+        -------
+        Prior | VariableFactory
+            The validated prior object.
+
+        """
+        if isinstance(v, dict) and "class" in v:
+            # Handle wrapped format from to_dict()
+            return deserialize(v)
+        elif isinstance(v, dict):
+            # Handle flat format from model_dump()
+            return deserialize(v)
+        return v
 
     @property
     def nodes(self) -> list[str]:
@@ -748,39 +774,6 @@ class FourierBase(BaseModel):
             subplot_kwargs=subplot_kwargs,
             plot_kwargs=plot_kwargs,
         )
-
-    def to_dict(self) -> dict[str, Any]:
-        """Serialize the Fourier seasonality.
-
-        Returns
-        -------
-        dict[str, Any]
-            Serialized Fourier seasonality
-
-        """
-        return {
-            "class": self.__class__.__name__,
-            "data": self.model_dump(mode="json"),
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
-        """Deserialize the Fourier seasonality.
-
-        Parameters
-        ----------
-        data : dict[str, Any]
-            Serialized Fourier seasonality
-
-        Returns
-        -------
-        FourierBase
-            Deserialized Fourier seasonality
-
-        """
-        data = data["data"]
-        data["prior"] = deserialize(data["prior"])
-        return cls(**data)
 
 
 class YearlyFourier(FourierBase):
