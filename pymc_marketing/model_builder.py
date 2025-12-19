@@ -31,7 +31,6 @@ from pymc.util import RandomState
 from pymc_extras.printing import model_table
 from rich.table import Table
 
-from pymc_marketing.hsgp_kwargs import HSGPKwargs
 from pymc_marketing.utils import from_netcdf
 from pymc_marketing.version import __version__
 
@@ -173,12 +172,41 @@ class ModelIO:
     sampler_config: dict
     model_config: dict
 
+    @staticmethod
+    def _json_encoder(obj: Any) -> Any:
+        """Encode non-serializable objects to JSON-compatible format.
+
+        Used for both model_config serialization and ID computation to ensure
+        consistent hashing across save/load cycles.
+
+        Parameters
+        ----------
+        obj : Any
+            Object to encode.
+
+        Returns
+        -------
+        Any
+            JSON-compatible representation.
+
+        """
+        if hasattr(obj, "to_dict"):
+            return obj.to_dict()
+        elif hasattr(obj, "model_dump"):  # Pydantic models
+            return obj.model_dump(mode="json")
+        elif hasattr(obj, "__dict__"):
+            return obj.__dict__
+        return str(obj)
+
     @property
     def id(self) -> str:
         """Generate a unique hash value for the model.
 
         The hash value is created using the last 16 characters of the SHA256 hash encoding,
-        based on the model configuration, version, and model type.
+        based on the normalized serializable model configuration, version, and model type.
+
+        Uses `_serializable_model_config` with sorted keys to ensure reproducible hashing
+        across save/load cycles, independent of object memory addresses.
 
         Returns
         -------
@@ -195,7 +223,13 @@ class ModelIO:
 
         """
         hasher = hashlib.sha256()
-        hasher.update(str(self.model_config.values()).encode())
+        # Use serializable config with sorted keys for stable, reproducible hashing
+        config_str = json.dumps(
+            self._serializable_model_config,
+            default=self._json_encoder,
+            sort_keys=True,
+        )
+        hasher.update(config_str.encode())
         hasher.update(self.version.encode())
         hasher.update(self._model_type.encode())
         return hasher.hexdigest()[:16]
@@ -222,14 +256,6 @@ class ModelIO:
         dict[str, str]
             A dictionary of attributes for the inference data.
         """
-
-        def default(x):
-            if hasattr(x, "to_dict"):
-                return x.to_dict()
-            elif isinstance(x, HSGPKwargs):
-                return x.model_dump(mode="json")
-            return x.__dict__
-
         attrs: dict[str, str] = {}
 
         attrs["id"] = self.id
@@ -238,7 +264,7 @@ class ModelIO:
         attrs["sampler_config"] = json.dumps(self.sampler_config)
         attrs["model_config"] = json.dumps(
             self._serializable_model_config,
-            default=default,
+            default=self._json_encoder,
         )
 
         return attrs

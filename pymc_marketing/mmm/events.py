@@ -105,6 +105,7 @@ from pydantic import (
     ConfigDict,
     Field,
     InstanceOf,
+    field_serializer,
     model_validator,
     validate_call,
 )
@@ -121,8 +122,8 @@ BasisMeta = create_registration_meta(BASIS_TRANSFORMATIONS)
 class Basis(Transformation, metaclass=BasisMeta):  # type: ignore[metaclass]
     """Basis transformation associated with an event model."""
 
-    prefix: str = "basis"
-    lookup_name: str
+    prefix: str = "basis"  # type: ignore[misc]
+    lookup_name: str  # type: ignore[misc]
 
     @validate_call
     def sample_curve(
@@ -167,7 +168,7 @@ class Basis(Transformation, metaclass=BasisMeta):  # type: ignore[metaclass]
 def basis_from_dict(data: dict) -> Basis:
     """Create a basis transformation from a dictionary."""
     data = data.copy()
-    lookup_name = data.pop("lookup_name")
+    lookup_name = data.pop("lookup_name")  # type: ignore[misc]
     cls = BASIS_TRANSFORMATIONS[lookup_name]
 
     if "priors" in data:
@@ -193,6 +194,16 @@ class EventEffect(BaseModel):
     effect_size: InstanceOf[Prior]
     dims: str | tuple[str, ...]
     model_config = ConfigDict(extra="forbid")
+
+    @field_serializer("basis", when_used="json")
+    def serialize_basis(self, value: Basis) -> dict:
+        """Serialize Basis to dict for JSON mode."""
+        return value.to_dict()
+
+    @field_serializer("effect_size", when_used="json")
+    def serialize_effect_size(self, value: Prior) -> dict:
+        """Serialize Prior to dict for JSON mode."""
+        return value.to_dict()
 
     @model_validator(mode="before")
     def _dims_to_tuple(self):
@@ -235,12 +246,40 @@ class EventEffect(BaseModel):
 
     @classmethod
     def from_dict(cls, data: dict) -> "EventEffect":
-        """Create an event effect from a dictionary."""
-        return cls(
-            basis=deserialize(data["basis"]),
-            effect_size=deserialize(data["effect_size"]),
-            dims=data["dims"],
-        )
+        """Create an event effect from a dictionary in wrapped format.
+
+        Parameters
+        ----------
+        data : dict
+            The data to create the object from in wrapped format:
+            ``{"class": "EventEffect", "data": {...}}``
+
+        Returns
+        -------
+        EventEffect
+            The object created from the data.
+
+        Raises
+        ------
+        ValueError
+            If data is not in wrapped format with "class" and "data" keys.
+
+        """
+        if "class" not in data or "data" not in data:
+            raise ValueError(
+                f"Invalid serialization format. Expected wrapped format: "
+                f"{{'class': 'EventEffect', 'data': {{...}}}}, but got: {data}"
+            )
+
+        inner_data = data["data"]
+
+        # Defensively deserialize Prior/Basis fields if they are dicts
+        for key in ["basis", "effect_size"]:
+            if key in inner_data and isinstance(inner_data[key], dict):
+                inner_data = inner_data.copy()
+                inner_data[key] = deserialize(inner_data[key])
+
+        return cls.model_validate(inner_data)
 
 
 def _is_event_effect(data: dict) -> bool:
@@ -257,9 +296,9 @@ register_deserialization(
 class GaussianBasis(Basis):
     """Gaussian basis transformation."""
 
-    lookup_name = "gaussian"
+    lookup_name = "gaussian"  # type: ignore[misc]
 
-    def function(self, x: pt.TensorLike, sigma: pt.TensorLike) -> TensorVariable:
+    def function(self, x: pt.TensorLike, sigma: pt.TensorLike) -> TensorVariable:  # type: ignore[misc]
         """Gaussian bump function."""
         rv = pm.Normal.dist(mu=0.0, sigma=sigma)
         out = pm.math.exp(pm.logp(rv, x))
@@ -306,7 +345,7 @@ class HalfGaussianBasis(Basis):
         Prefix for the parameter names.
     """
 
-    lookup_name = "half_gaussian"
+    lookup_name = "half_gaussian"  # type: ignore[misc]
 
     def __init__(
         self,
@@ -318,7 +357,7 @@ class HalfGaussianBasis(Basis):
         self.mode = mode
         self.include_event = include_event
 
-    def function(self, x: pt.TensorLike, sigma: pt.TensorLike) -> TensorVariable:
+    def function(self, x: pt.TensorLike, sigma: pt.TensorLike) -> TensorVariable:  # type: ignore[misc]
         """One-sided Gaussian bump function."""
         rv = pm.Normal.dist(mu=0.0, sigma=sigma)
         out = pm.math.exp(pm.logp(rv, x))
@@ -386,7 +425,7 @@ class AsymmetricGaussianBasis(Basis):
         Prefix for the parameters.
     """
 
-    lookup_name = "asymmetric_gaussian"
+    lookup_name = "asymmetric_gaussian"  # type: ignore[misc]
 
     def __init__(
         self,

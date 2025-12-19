@@ -31,7 +31,7 @@ Create a new saturation transformation:
     class InfiniteReturns(SaturationTransformation):
         lookup_name: str = "infinite_returns"
 
-        def function(self, x, b):
+        def function(self, x, b):  # type: ignore[misc]
             return b * x
 
         default_priors = {"b": Prior("HalfNormal", sigma=1)}
@@ -149,7 +149,7 @@ class SaturationTransformation(Transformation, metaclass=SaturationRegistrationM
 
     """
 
-    prefix: str = "saturation"
+    prefix: str = "saturation"  # type: ignore[misc]
 
     @validate_call
     def sample_curve(
@@ -217,7 +217,7 @@ class LogisticSaturation(SaturationTransformation):
 
     lookup_name = "logistic"
 
-    def function(self, x, lam, beta):
+    def function(self, x, lam, beta):  # type: ignore[misc]
         """Logistic saturation function."""
         return beta * logistic_saturation(x, lam)
 
@@ -251,7 +251,7 @@ class InverseScaledLogisticSaturation(SaturationTransformation):
 
     lookup_name = "inverse_scaled_logistic"
 
-    def function(self, x, lam, beta):
+    def function(self, x, lam, beta):  # type: ignore[misc]
         """Inverse scaled logistic saturation function."""
         return beta * inverse_scaled_logistic_saturation(x, lam)
 
@@ -285,7 +285,7 @@ class TanhSaturation(SaturationTransformation):
 
     lookup_name = "tanh"
 
-    def function(self, x, b, c):
+    def function(self, x, b, c):  # type: ignore[misc]
         """Tanh saturation function."""
         return tanh_saturation(x, b, c)
 
@@ -319,7 +319,7 @@ class TanhSaturationBaselined(SaturationTransformation):
 
     lookup_name = "tanh_baselined"
 
-    def function(self, x, x0, gain, r, beta):
+    def function(self, x, x0, gain, r, beta):  # type: ignore[misc]
         """Tanh saturation function."""
         return beta * tanh_saturation_baselined(x, x0, gain, r)
 
@@ -355,7 +355,7 @@ class MichaelisMentenSaturation(SaturationTransformation):
 
     lookup_name = "michaelis_menten"
 
-    def function(self, x, alpha, lam):
+    def function(self, x, alpha, lam):  # type: ignore[misc]
         """Michaelis-Menten saturation function."""
         return pt.as_tensor_variable(michaelis_menten(x, alpha, lam))
 
@@ -389,7 +389,7 @@ class HillSaturation(SaturationTransformation):
 
     lookup_name = "hill"
 
-    def function(self, x, slope, kappa, beta):
+    def function(self, x, slope, kappa, beta):  # type: ignore[misc]
         """Hill saturation function."""
         return beta * hill_function(x, slope, kappa)
 
@@ -457,7 +457,7 @@ class RootSaturation(SaturationTransformation):
 
     lookup_name = "root"
 
-    def function(self, x, alpha, beta):
+    def function(self, x, alpha, beta):  # type: ignore[misc]
         """Root saturation function."""
         return beta * root_saturation(x, alpha)
 
@@ -489,7 +489,7 @@ class NoSaturation(SaturationTransformation):
 
     lookup_name = "no_saturation"
 
-    def function(self, x, beta):
+    def function(self, x, beta):  # type: ignore[misc]
         """Linear saturation function."""
         return pt.as_tensor_variable(beta * x)
 
