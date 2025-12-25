@@ -497,18 +497,43 @@ class NoSaturation(SaturationTransformation):
 
 
 def saturation_from_dict(data: dict) -> SaturationTransformation:
-    """Get a saturation function from a dictionary."""
-    data = data.copy()
-    cls = SATURATION_TRANSFORMATIONS[data.pop("lookup_name")]
+    """Create a saturation transformation from a dictionary.
 
-    if "priors" in data:
-        data["priors"] = {
-            key: deserialize(value) for key, value in data["priors"].items()
+    Handles both wrapped format (new) and flat format (backward compat):
+    - Wrapped: {"class": "SaturationClassName", "version": 1, "data": {...}}
+    - Flat: {"lookup_name": "...", "prefix": "...", "priors": {...}}
+    """
+    # Handle wrapped format
+    if "class" in data and "data" in data:
+        inner_data = data["data"].copy()
+        lookup_name = inner_data.pop("lookup_name")
+    # Handle flat format (backward compatibility)
+    else:
+        inner_data = data.copy()
+        lookup_name = inner_data.pop("lookup_name")  # type: ignore[misc]
+
+    # Get class from registry by lookup_name
+    cls = SATURATION_TRANSFORMATIONS[lookup_name]
+
+    # Deserialize priors if present
+    if "priors" in inner_data and isinstance(inner_data["priors"], dict):
+        inner_data["priors"] = {
+            k: deserialize(v) for k, v in inner_data["priors"].items()
         }
-    return cls(**data)
+
+    return cls(**inner_data)
 
 
 def _is_saturation(data):
+    """Check if data represents a Saturation transformation.
+
+    Supports both wrapped and flat formats.
+    """
+    # Wrapped format: {"class": "...", "data": {"lookup_name": "..."}}
+    if "class" in data and "data" in data:
+        if "lookup_name" in data["data"]:
+            return data["data"]["lookup_name"] in SATURATION_TRANSFORMATIONS
+    # Flat format: {"lookup_name": "..."}
     return "lookup_name" in data and data["lookup_name"] in SATURATION_TRANSFORMATIONS
 
 

@@ -40,7 +40,17 @@ from pymc_marketing.mmm.components.adstock import (
     adstock_from_dict,
 )
 from pymc_marketing.mmm.components.saturation import (
+    HillSaturation,
+    HillSaturationSigmoid,
+    InverseScaledLogisticSaturation,
     LogisticSaturation,
+    MichaelisMentenSaturation,
+    NoSaturation,
+    RootSaturation,
+    SaturationTransformation,
+    TanhSaturation,
+    TanhSaturationBaselined,
+    saturation_from_dict,
 )
 from pymc_marketing.mmm.events import (
     AsymmetricGaussianBasis,
@@ -182,36 +192,182 @@ class TestAdstockWrappedFormat:
 class TestSaturationWrappedFormat:
     """Test wrapped format serialization for Saturation classes."""
 
-    def test_saturation_to_dict_wrapped_format(self) -> None:
-        """Test that to_dict() returns wrapped format."""
-        saturation = LogisticSaturation()
+    @pytest.mark.parametrize(
+        "saturation_cls,lookup_name",
+        [
+            (LogisticSaturation, "logistic"),
+            (InverseScaledLogisticSaturation, "inverse_scaled_logistic"),
+            (TanhSaturation, "tanh"),
+            (TanhSaturationBaselined, "tanh_baselined"),
+            (MichaelisMentenSaturation, "michaelis_menten"),
+            (HillSaturation, "hill"),
+            (HillSaturationSigmoid, "hill_sigmoid"),
+            (RootSaturation, "root"),
+            (NoSaturation, "no_saturation"),
+        ],
+    )
+    def test_saturation_to_dict_wrapped_format(
+        self, saturation_cls: type[SaturationTransformation], lookup_name: str
+    ) -> None:
+        """Test that to_dict() returns wrapped format for all saturation classes."""
+        saturation = saturation_cls()
         data = saturation.to_dict()
 
+        # Check wrapped format structure
         assert isinstance(data, dict)
-        assert "class" in data
-        assert data["class"] == "LogisticSaturation"
+        assert "class" in data, (
+            "to_dict() should return wrapped format with 'class' key"
+        )
+        assert data["class"] == saturation_cls.__name__
         assert "version" in data
         assert data["version"] == 1
         assert "data" in data
+        assert isinstance(data["data"], dict)
 
-    def test_saturation_from_dict_wrapped_format(self) -> None:
+        # Check that data contains expected fields
+        assert "lookup_name" in data["data"]
+        assert data["data"]["lookup_name"] == lookup_name
+        assert "prefix" in data["data"]
+        assert data["data"]["prefix"] == "saturation"
+
+    @pytest.mark.parametrize(
+        "saturation_cls",
+        [
+            LogisticSaturation,
+            InverseScaledLogisticSaturation,
+            TanhSaturation,
+            TanhSaturationBaselined,
+            MichaelisMentenSaturation,
+            HillSaturation,
+            HillSaturationSigmoid,
+            RootSaturation,
+            NoSaturation,
+        ],
+    )
+    def test_saturation_from_dict_wrapped_format(
+        self, saturation_cls: type[SaturationTransformation]
+    ) -> None:
         """Test that from_dict() can load wrapped format."""
-        saturation = LogisticSaturation()
+        saturation = saturation_cls()
         data = saturation.to_dict()
 
-        restored = LogisticSaturation.from_dict(data)
-        assert isinstance(restored, LogisticSaturation)
+        # Load from wrapped format
+        restored = saturation_cls.from_dict(data)
+        assert isinstance(restored, saturation_cls)
+        assert restored.lookup_name == saturation.lookup_name
 
-    def test_saturation_from_dict_flat_backward_compat(self) -> None:
-        """Test backward compatibility with flat format."""
+    @pytest.mark.parametrize(
+        "saturation_cls,lookup_name",
+        [
+            (LogisticSaturation, "logistic"),
+            (InverseScaledLogisticSaturation, "inverse_scaled_logistic"),
+            (TanhSaturation, "tanh"),
+            (TanhSaturationBaselined, "tanh_baselined"),
+            (MichaelisMentenSaturation, "michaelis_menten"),
+            (HillSaturation, "hill"),
+            (HillSaturationSigmoid, "hill_sigmoid"),
+            (RootSaturation, "root"),
+            (NoSaturation, "no_saturation"),
+        ],
+    )
+    def test_saturation_from_dict_flat_backward_compat(
+        self, saturation_cls: type[SaturationTransformation], lookup_name: str
+    ) -> None:
+        """Test that from_dict() handles old flat format for backward compatibility."""
+        # Old flat format
         old_data = {
-            "lookup_name": "logistic",
+            "lookup_name": lookup_name,
             "prefix": "saturation",
             "priors": {},
         }
 
-        saturation = LogisticSaturation.from_dict(old_data)
-        assert isinstance(saturation, LogisticSaturation)
+        # Should still load (backward compatibility)
+        saturation = saturation_cls.from_dict(old_data)
+        assert isinstance(saturation, saturation_cls)
+        assert saturation.lookup_name == lookup_name
+
+    @pytest.mark.parametrize(
+        "saturation_cls",
+        [
+            LogisticSaturation,
+            InverseScaledLogisticSaturation,
+            TanhSaturation,
+            TanhSaturationBaselined,
+            MichaelisMentenSaturation,
+            HillSaturation,
+            HillSaturationSigmoid,
+            RootSaturation,
+            NoSaturation,
+        ],
+    )
+    def test_saturation_json_roundtrip(
+        self, saturation_cls: type[SaturationTransformation]
+    ) -> None:
+        """Test JSON serialization round-trip for saturation classes."""
+        saturation = saturation_cls()
+        data = saturation.to_dict()
+
+        # Serialize to JSON
+        json_str = json.dumps(data)
+        restored_data = json.loads(json_str)
+
+        # Deserialize
+        restored = saturation_cls.from_dict(restored_data)
+        assert isinstance(restored, saturation_cls)
+        assert restored.lookup_name == saturation.lookup_name
+
+    @pytest.mark.parametrize(
+        "saturation_cls,lookup_name",
+        [
+            (LogisticSaturation, "logistic"),
+            (InverseScaledLogisticSaturation, "inverse_scaled_logistic"),
+            (TanhSaturation, "tanh"),
+            (TanhSaturationBaselined, "tanh_baselined"),
+            (MichaelisMentenSaturation, "michaelis_menten"),
+            (HillSaturation, "hill"),
+            (HillSaturationSigmoid, "hill_sigmoid"),
+            (RootSaturation, "root"),
+            (NoSaturation, "no_saturation"),
+        ],
+    )
+    def test_saturation_factory_wrapped_format(
+        self, saturation_cls: type[SaturationTransformation], lookup_name: str
+    ) -> None:
+        """Test that factory function works with wrapped format."""
+        saturation = saturation_cls()
+        data = saturation.to_dict()
+
+        # Factory should handle wrapped format
+        restored = saturation_from_dict(data)
+        assert isinstance(restored, saturation_cls)
+        assert restored.lookup_name == lookup_name
+
+    @pytest.mark.parametrize(
+        "lookup_name",
+        [
+            "logistic",
+            "inverse_scaled_logistic",
+            "tanh",
+            "tanh_baselined",
+            "michaelis_menten",
+            "hill",
+            "hill_sigmoid",
+            "root",
+            "no_saturation",
+        ],
+    )
+    def test_saturation_factory_flat_backward_compat(self, lookup_name: str) -> None:
+        """Test that factory function handles old flat format."""
+        old_data = {
+            "lookup_name": lookup_name,
+            "prefix": "saturation",
+            "priors": {},
+        }
+
+        # Factory should still work with flat format
+        saturation = saturation_from_dict(old_data)
+        assert isinstance(saturation, SaturationTransformation)
+        assert saturation.lookup_name == lookup_name
 
 
 class TestBasisWrappedFormat:
