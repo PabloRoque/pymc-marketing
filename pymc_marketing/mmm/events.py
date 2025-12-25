@@ -246,37 +246,41 @@ class EventEffect(BaseModel):
 
     @classmethod
     def from_dict(cls, data: dict) -> "EventEffect":
-        """Create an event effect from a dictionary in wrapped format.
+        """Create an event effect from a dictionary.
+
+        Supports both wrapped and flat (inner) formats for backward compatibility.
 
         Parameters
         ----------
         data : dict
-            The data to create the object from in wrapped format:
-            ``{"class": "EventEffect", "data": {...}}``
+            The data to create the object from. Can be either:
+            - Wrapped format: ``{"class": "EventEffect", "data": {...}}``
+            - Flat format (inner data): ``{"basis": {...}, "effect_size": {...}, ...}``
 
         Returns
         -------
         EventEffect
             The object created from the data.
 
-        Raises
-        ------
-        ValueError
-            If data is not in wrapped format with "class" and "data" keys.
-
         """
-        if "class" not in data or "data" not in data:
+        # Handle both wrapped and flat formats
+        if "class" in data and "data" in data:
+            # Wrapped format
+            inner_data = data["data"]
+        elif "basis" in data or "effect_size" in data:
+            # Flat/inner format (direct field access)
+            inner_data = data
+        else:
             raise ValueError(
-                f"Invalid serialization format. Expected wrapped format: "
-                f"{{'class': 'EventEffect', 'data': {{...}}}}, but got: {data}"
+                f"Invalid serialization format. Expected wrapped format "
+                f"{{'class': 'EventEffect', 'data': {{...}}}} or flat format "
+                f"{{'basis': ..., 'effect_size': ..., ...}}, but got: {data}"
             )
 
-        inner_data = data["data"]
-
         # Defensively deserialize Prior/Basis fields if they are dicts
+        inner_data = inner_data.copy() if isinstance(inner_data, dict) else inner_data
         for key in ["basis", "effect_size"]:
             if key in inner_data and isinstance(inner_data[key], dict):
-                inner_data = inner_data.copy()
                 inner_data[key] = deserialize(inner_data[key])
 
         return cls.model_validate(inner_data)
