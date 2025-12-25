@@ -781,18 +781,29 @@ class Transformation(BaseModel, SerializableMixin):
         return serialized
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert the transformation to a dictionary.
+        """Convert the transformation to a dictionary in wrapped format.
 
-        Produces a custom format with lookup_name, prefix, and serialized priors.
-        This format is compatible with existing saved models.
+        Produces wrapped format with class metadata and serialized priors.
+        Format: {"class": "ClassName", "version": 1, "data": {...}}
+
+        The "data" section contains:
+        - "lookup_name": The class lookup name (for type identification)
+        - "prefix": The variable prefix
+        - "priors": Dict of serialized priors
 
         Returns
         -------
         dict
-            The dictionary defining the transformation with keys:
-            - "lookup_name": The class lookup name (for type identification)
-            - "prefix": The variable prefix
-            - "priors": Dict of serialized priors
+            The dictionary defining the transformation with structure:
+            {
+                "class": "ClassName",
+                "version": 1,
+                "data": {
+                    "lookup_name": "...",
+                    "prefix": "...",
+                    "priors": {...}
+                }
+            }
 
         Notes
         -----
@@ -800,11 +811,15 @@ class Transformation(BaseModel, SerializableMixin):
         including Prior objects, numpy arrays, and other types.
         """
         return {
-            "lookup_name": self.lookup_name,
-            "prefix": self.prefix,
-            "priors": {
-                key: _serialize_value(value)
-                for key, value in self.function_priors.items()
+            "class": self.__class__.__name__,
+            "version": 1,
+            "data": {
+                "lookup_name": self.lookup_name,
+                "prefix": self.prefix,
+                "priors": {
+                    key: _serialize_value(value)
+                    for key, value in self.function_priors.items()
+                },
             },
         }
 
@@ -819,10 +834,14 @@ class Transformation(BaseModel, SerializableMixin):
     def from_dict(cls, data: dict[str, Any], strict: bool = True) -> "Transformation":
         """Deserialize from dictionary with defensive pattern.
 
+        Supports both wrapped format (new) and flat format (backward compat):
+        - Wrapped: {"class": "ClassName", "version": 1, "data": {...}}
+        - Flat: {"lookup_name": "...", "prefix": "...", "priors": {...}}
+
         Parameters
         ----------
         data : dict
-            Dictionary to deserialize.
+            Dictionary to deserialize in wrapped or flat format.
         strict : bool, optional
             Reserved for compatibility with SerializableMixin. Default is True.
             Currently not used - Transformation always uses defensive deserialization.
@@ -833,7 +852,17 @@ class Transformation(BaseModel, SerializableMixin):
             The deserialized transformation.
 
         """
-        inner_data = data.copy() if isinstance(data, dict) else data
+        # Handle wrapped format: {"class": "ClassName", "version": 1, "data": {...}}
+        if "class" in data and "data" in data:
+            inner_data = (
+                data["data"].copy() if isinstance(data["data"], dict) else data["data"]
+            )
+        # Handle flat format (backward compatibility): {"lookup_name": "...", ...}
+        elif "lookup_name" in data or "prefix" in data:
+            inner_data = data.copy() if isinstance(data, dict) else data
+        else:
+            # Unknown format
+            inner_data = data.copy() if isinstance(data, dict) else data
 
         # Deserialize priors if present
         if "priors" in inner_data and isinstance(inner_data["priors"], dict):

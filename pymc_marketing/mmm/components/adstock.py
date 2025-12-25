@@ -151,12 +151,17 @@ class AdstockTransformation(Transformation, metaclass=AdstockRegistrationMeta): 
         )
 
     def to_dict(self) -> dict:
-        """Convert the adstock transformation to a dictionary."""
+        """Convert the adstock transformation to a dictionary in wrapped format.
+
+        Returns wrapped format: {"class": "...", "version": 1, "data": {...}}
+        with additional adstock-specific fields in the data section.
+        """
         data = super().to_dict()
 
-        data["l_max"] = self.l_max
-        data["normalize"] = self.normalize
-        data["mode"] = self.mode.name
+        # Add adstock-specific fields to the data section
+        data["data"]["l_max"] = self.l_max
+        data["data"]["normalize"] = self.normalize
+        data["data"]["mode"] = self.mode.name
 
         return data
 
@@ -403,18 +408,43 @@ class NoAdstock(AdstockTransformation):
 
 
 def adstock_from_dict(data: dict) -> AdstockTransformation:
-    """Create an adstock transformation from a dictionary."""
-    data = data.copy()
-    lookup_name = data.pop("lookup_name")  # type: ignore[misc]
+    """Create an adstock transformation from a dictionary.
+
+    Handles both wrapped format (new) and flat format (backward compat):
+    - Wrapped: {"class": "AdstockClassName", "version": 1, "data": {...}}
+    - Flat: {"lookup_name": "...", "prefix": "...", "priors": {...}}
+    """
+    # Handle wrapped format
+    if "class" in data and "data" in data:
+        inner_data = data["data"].copy()
+        lookup_name = inner_data.pop("lookup_name")
+    # Handle flat format (backward compatibility)
+    else:
+        inner_data = data.copy()
+        lookup_name = inner_data.pop("lookup_name")  # type: ignore[misc]
+
+    # Get class from registry by lookup_name
     cls = ADSTOCK_TRANSFORMATIONS[lookup_name]
 
-    if "priors" in data:
-        data["priors"] = {k: deserialize(v) for k, v in data["priors"].items()}
+    # Deserialize priors if present
+    if "priors" in inner_data and isinstance(inner_data["priors"], dict):
+        inner_data["priors"] = {
+            k: deserialize(v) for k, v in inner_data["priors"].items()
+        }
 
-    return cls(**data)
+    return cls(**inner_data)
 
 
 def _is_adstock(data):
+    """Check if data represents an Adstock transformation.
+
+    Supports both wrapped and flat formats.
+    """
+    # Wrapped format: {"class": "...", "data": {"lookup_name": "..."}}
+    if "class" in data and "data" in data:
+        if "lookup_name" in data["data"]:
+            return data["data"]["lookup_name"] in ADSTOCK_TRANSFORMATIONS
+    # Flat format: {"lookup_name": "..."}
     return "lookup_name" in data and data["lookup_name"] in ADSTOCK_TRANSFORMATIONS
 
 
