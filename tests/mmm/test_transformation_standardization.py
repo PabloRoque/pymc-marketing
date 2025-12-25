@@ -374,24 +374,34 @@ class TestBasisWrappedFormat:
     """Test wrapped format serialization for Basis classes."""
 
     @pytest.mark.parametrize(
-        "basis_cls",
+        "basis_cls,lookup_name",
         [
-            GaussianBasis,
-            HalfGaussianBasis,
-            AsymmetricGaussianBasis,
+            (GaussianBasis, "gaussian"),
+            (HalfGaussianBasis, "half_gaussian"),
+            (AsymmetricGaussianBasis, "asymmetric_gaussian"),
         ],
     )
-    def test_basis_to_dict_wrapped_format(self, basis_cls: type[Basis]) -> None:
-        """Test that to_dict() returns wrapped format."""
+    def test_basis_to_dict_wrapped_format(
+        self, basis_cls: type[Basis], lookup_name: str
+    ) -> None:
+        """Test that to_dict() returns wrapped format for all basis classes."""
         basis = basis_cls()
         data = basis.to_dict()
 
+        # Check wrapped format structure
         assert isinstance(data, dict)
         assert "class" in data
         assert data["class"] == basis_cls.__name__
         assert "version" in data
         assert data["version"] == 1
         assert "data" in data
+        assert isinstance(data["data"], dict)
+
+        # Check that data contains expected fields
+        assert "lookup_name" in data["data"]
+        assert data["data"]["lookup_name"] == lookup_name
+        assert "prefix" in data["data"]
+        assert data["data"]["prefix"] == "basis"
 
     @pytest.mark.parametrize(
         "basis_cls",
@@ -406,16 +416,97 @@ class TestBasisWrappedFormat:
         basis = basis_cls()
         data = basis.to_dict()
 
+        # Load from wrapped format
         restored = basis_cls.from_dict(data)
         assert isinstance(restored, basis_cls)
+        assert restored.lookup_name == basis.lookup_name
 
-    def test_basis_from_dict_flat_backward_compat(self) -> None:
+    @pytest.mark.parametrize(
+        "basis_cls,lookup_name",
+        [
+            (GaussianBasis, "gaussian"),
+            (HalfGaussianBasis, "half_gaussian"),
+            (AsymmetricGaussianBasis, "asymmetric_gaussian"),
+        ],
+    )
+    def test_basis_from_dict_flat_backward_compat(
+        self, basis_cls: type[Basis], lookup_name: str
+    ) -> None:
         """Test backward compatibility with flat format."""
         old_data = {
-            "lookup_name": "gaussian",
+            "lookup_name": lookup_name,
             "prefix": "basis",
             "priors": {},
         }
 
-        basis = GaussianBasis.from_dict(old_data)
-        assert isinstance(basis, GaussianBasis)
+        # Should still load (backward compatibility)
+        basis = basis_cls.from_dict(old_data)
+        assert isinstance(basis, basis_cls)
+        assert basis.lookup_name == lookup_name
+
+    @pytest.mark.parametrize(
+        "basis_cls",
+        [
+            GaussianBasis,
+            HalfGaussianBasis,
+            AsymmetricGaussianBasis,
+        ],
+    )
+    def test_basis_json_roundtrip(self, basis_cls: type[Basis]) -> None:
+        """Test JSON serialization round-trip for basis classes."""
+        basis = basis_cls()
+        data = basis.to_dict()
+
+        # Serialize to JSON
+        json_str = json.dumps(data)
+        restored_data = json.loads(json_str)
+
+        # Deserialize
+        restored = basis_cls.from_dict(restored_data)
+        assert isinstance(restored, basis_cls)
+        assert restored.lookup_name == basis.lookup_name
+
+    @pytest.mark.parametrize(
+        "basis_cls,lookup_name",
+        [
+            (GaussianBasis, "gaussian"),
+            (HalfGaussianBasis, "half_gaussian"),
+            (AsymmetricGaussianBasis, "asymmetric_gaussian"),
+        ],
+    )
+    def test_basis_factory_wrapped_format(
+        self, basis_cls: type[Basis], lookup_name: str
+    ) -> None:
+        """Test that factory function works with wrapped format."""
+        from pymc_marketing.mmm.events import basis_from_dict
+
+        basis = basis_cls()
+        data = basis.to_dict()
+
+        # Factory should handle wrapped format
+        restored = basis_from_dict(data)
+        assert isinstance(restored, basis_cls)
+        assert restored.lookup_name == lookup_name
+
+    @pytest.mark.parametrize(
+        "lookup_name",
+        [
+            "gaussian",
+            "half_gaussian",
+            "asymmetric_gaussian",
+        ],
+    )
+    def test_basis_factory_flat_backward_compat(self, lookup_name: str) -> None:
+        """Test that factory function handles old flat format."""
+        from pymc_marketing.mmm.events import basis_from_dict
+
+        old_data = {
+            "lookup_name": lookup_name,
+            "prefix": "basis",
+            "priors": {},
+        }
+
+        # Factory should still work with flat format
+        basis = basis_from_dict(old_data)
+        assert isinstance(basis, Basis)
+        assert basis.lookup_name == lookup_name

@@ -166,18 +166,43 @@ class Basis(Transformation, metaclass=BasisMeta):  # type: ignore[metaclass]
 
 
 def basis_from_dict(data: dict) -> Basis:
-    """Create a basis transformation from a dictionary."""
-    data = data.copy()
-    lookup_name = data.pop("lookup_name")  # type: ignore[misc]
+    """Create a basis transformation from a dictionary.
+
+    Handles both wrapped format (new) and flat format (backward compat):
+    - Wrapped: {"class": "BasisClassName", "version": 1, "data": {...}}
+    - Flat: {"lookup_name": "...", "prefix": "...", "priors": {...}}
+    """
+    # Handle wrapped format
+    if "class" in data and "data" in data:
+        inner_data = data["data"].copy()
+        lookup_name = inner_data.pop("lookup_name")
+    # Handle flat format (backward compatibility)
+    else:
+        inner_data = data.copy()
+        lookup_name = inner_data.pop("lookup_name")  # type: ignore[misc]
+
+    # Get class from registry by lookup_name
     cls = BASIS_TRANSFORMATIONS[lookup_name]
 
-    if "priors" in data:
-        data["priors"] = {k: deserialize(v) for k, v in data["priors"].items()}
+    # Deserialize priors if present
+    if "priors" in inner_data and isinstance(inner_data["priors"], dict):
+        inner_data["priors"] = {
+            k: deserialize(v) for k, v in inner_data["priors"].items()
+        }
 
-    return cls(**data)
+    return cls(**inner_data)
 
 
 def _is_basis(data):
+    """Check if data represents a Basis transformation.
+
+    Supports both wrapped and flat formats.
+    """
+    # Wrapped format: {"class": "...", "data": {"lookup_name": "..."}}
+    if "class" in data and "data" in data:
+        if "lookup_name" in data["data"]:
+            return data["data"]["lookup_name"] in BASIS_TRANSFORMATIONS
+    # Flat format: {"lookup_name": "..."}
     return "lookup_name" in data and data["lookup_name"] in BASIS_TRANSFORMATIONS
 
 
