@@ -91,7 +91,8 @@ Apply the media transformation to media data in PyMC model:
 
 from __future__ import annotations
 
-from typing import cast
+from collections.abc import Callable
+from typing import Any, cast
 
 import pymc as pm
 import pytensor.tensor as pt
@@ -109,12 +110,13 @@ from pymc_extras.deserialize import deserialize, register_deserialization
 from pymc_marketing.mmm.components.adstock import (
     AdstockTransformation,
 )
+from pymc_marketing.mmm.components.base import SerializableMixin
 from pymc_marketing.mmm.components.saturation import (
     SaturationTransformation,
 )
 
 
-class MediaTransformation(BaseModel):
+class MediaTransformation(BaseModel, SerializableMixin):
     """Wrapper for applying adstock and saturation transformation to media data.
 
     Parameters
@@ -143,6 +145,58 @@ class MediaTransformation(BaseModel):
     dims: Dims | None = None
     model_config = ConfigDict(extra="forbid")
 
+    @classmethod
+    def _get_field_serializers(cls) -> dict[str, Callable[[Any], Any]]:
+        """Get field serializers for adstock and saturation Transformations.
+
+        Returns
+        -------
+        dict[str, Callable[[Any], Any]]
+            Mapping of field names to serializer functions.
+            Uses serialize_prior (generic to_dict helper) for both Transformation types.
+
+        """
+        return {
+            "adstock": SerializableMixin.serialize_prior,
+            "saturation": SerializableMixin.serialize_prior,
+        }
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to wrapped dictionary format.
+
+        Overrides SerializableMixin.to_dict to exclude computed fields (first, second).
+
+        Returns
+        -------
+        dict[str, Any]
+            Wrapped format: {"class": "MediaTransformation", "data": {...}}
+
+        """
+        # Get field serializers
+        field_serializers = self._get_field_serializers()
+
+        # Exclude computed fields ('first', 'second') and custom serializer fields
+        fields_to_serialize = set(field_serializers.keys()) & set(
+            self.model_fields.keys()  # type: ignore[attr-defined]
+        )
+        exclude_fields = fields_to_serialize | {"first", "second"}
+
+        # Dump model without computed fields and custom serializer fields
+        data = self.model_dump(  # type: ignore[attr-defined]
+            mode="json",
+            exclude=exclude_fields,
+        )
+
+        # Apply custom field serializers to original field values
+        for field_name in fields_to_serialize:
+            original_value = getattr(self, field_name)
+            data[field_name] = field_serializers[field_name](original_value)
+
+        return {
+            "class": self.__class__.__name__,
+            "data": data,
+        }
+
     @field_serializer("adstock", when_used="json")
     def serialize_adstock(self, value: AdstockTransformation) -> dict:
         """Serialize AdstockTransformation to dict for JSON mode."""
@@ -168,6 +222,8 @@ class MediaTransformation(BaseModel):
         """Validate dims and ensure compatibility."""
         if isinstance(self.dims, str):
             self.dims = (self.dims,)
+        elif isinstance(self.dims, list):
+            self.dims = tuple(self.dims)
 
         self.dims = self.dims or ()
 
@@ -235,39 +291,30 @@ class MediaTransformation(BaseModel):
         """
         return self.second.apply(self.first.apply(x, self.dims), self.dims)
 
-    def to_dict(self) -> dict:
-        """Convert the media transformation to a dictionary.
-
-        Returns
-        -------
-        dict
-            The media transformation as a dictionary.
-
-        """
-        return {
-            "adstock": self.adstock.to_dict(),
-            "saturation": self.saturation.to_dict(),
-            "adstock_first": self.adstock_first,
-            "dims": self.dims,
-        }
-
     @classmethod
-    def from_dict(cls, data) -> MediaTransformation:
-        """Create a media transformation from a dictionary.
+    def from_dict(
+        cls, data: dict[str, Any], strict: bool = True
+    ) -> MediaTransformation:
+        """Deserialize MediaTransformation from wrapped dictionary format.
 
         Parameters
         ----------
-        data : dict
-            The data to create the media transformation from.
+        data : dict[str, Any]
+            Dictionary with wrapped format: {"class": "MediaTransformation", "data": {...}}
+        strict : bool, optional
+            Reserved for compatibility with SerializableMixin. Default is True.
 
         Returns
         -------
         MediaTransformation
-            The media transformation created from the dictionary.
+            Deserialized MediaTransformation instance.
 
         """
-        # Defensively deserialize Transformation fields if they are dicts
-        inner_data = data.copy()
+        # Extract data from wrapped format or use as-is for backward compatibility
+        payload = data["data"] if "data" in data else data
+
+        # Deserialize nested Transformation fields if they are dicts
+        inner_data = payload.copy() if isinstance(payload, dict) else payload
         if "adstock" in inner_data and isinstance(inner_data["adstock"], dict):
             inner_data["adstock"] = deserialize(inner_data["adstock"])
         if "saturation" in inner_data and isinstance(inner_data["saturation"], dict):
@@ -277,11 +324,23 @@ class MediaTransformation(BaseModel):
 
 
 def _is_media_transformation(data):
+    """Check if data represents a MediaTransformation in wrapped format.
+
+    Parameters
+    ----------
+    data : Any
+        Data to check
+
+    Returns
+    -------
+    bool
+        True if data is wrapped MediaTransformation format
+
+    """
     return (
         isinstance(data, dict)
-        and "adstock" in data
-        and "saturation" in data
-        and "adstock_first" in data
+        and data.get("class") == "MediaTransformation"
+        and "data" in data
     )
 
 
@@ -291,7 +350,7 @@ register_deserialization(
 )
 
 
-class MediaConfig(BaseModel):
+class MediaConfig(BaseModel, SerializableMixin):
     """Configuration for a media transformation to certain media channels.
 
     Parameters
@@ -310,43 +369,47 @@ class MediaConfig(BaseModel):
     media_transformation: MediaTransformation
     model_config = ConfigDict(extra="forbid")
 
+    @classmethod
+    def _get_field_serializers(cls) -> dict[str, Callable[[Any], Any]]:
+        """Get field serializers for nested MediaTransformation.
+
+        Returns
+        -------
+        dict[str, Callable[[Any], Any]]
+            Mapping of field names to serializer functions.
+
+        """
+        return {
+            "media_transformation": SerializableMixin.serialize_prior,
+        }
+
     @field_serializer("media_transformation", when_used="json")
     def serialize_media_transformation(self, value: MediaTransformation) -> dict:
         """Serialize MediaTransformation to dict for JSON mode."""
         return value.to_dict()
 
-    def to_dict(self) -> dict:
-        """Convert the media configuration to a dictionary.
-
-        Returns
-        -------
-        dict
-            The media configuration as a dictionary.
-
-        """
-        return {
-            "name": self.name,
-            "columns": self.columns,
-            "media_transformation": self.media_transformation.to_dict(),
-        }
-
     @classmethod
-    def from_dict(cls, data) -> MediaConfig:
-        """Create a media configuration from a dictionary.
+    def from_dict(cls, data: dict[str, Any], strict: bool = True) -> MediaConfig:
+        """Deserialize MediaConfig from wrapped dictionary format.
 
         Parameters
         ----------
-        data : dict
-            The data to create the media configuration from.
+        data : dict[str, Any]
+            Dictionary with wrapped format: {"class": "MediaConfig", "data": {...}}
+        strict : bool, optional
+            Reserved for compatibility with SerializableMixin. Default is True.
 
         Returns
         -------
         MediaConfig
-            The media configuration created from the dictionary.
+            Deserialized MediaConfig instance.
 
         """
-        # Defensively deserialize nested MediaTransformation if it's a dict
-        inner_data = data.copy()
+        # Extract data from wrapped format or use as-is for backward compatibility
+        payload = data["data"] if "data" in data else data
+
+        # Deserialize nested MediaTransformation if it's a dict
+        inner_data = payload.copy() if isinstance(payload, dict) else payload
         if "media_transformation" in inner_data and isinstance(
             inner_data["media_transformation"], dict
         ):
@@ -358,13 +421,28 @@ class MediaConfig(BaseModel):
 
 
 def _is_media_config(data):
+    """Check if data represents a MediaConfig in wrapped format.
+
+    Parameters
+    ----------
+    data : Any
+        Data to check
+
+    Returns
+    -------
+    bool
+        True if data is wrapped MediaConfig format
+
+    """
     return (
-        isinstance(data, dict)
-        and "name" in data
-        and "columns" in data
-        and "media_transformation" in data
-        and _is_media_transformation(data["media_transformation"])
+        isinstance(data, dict) and data.get("class") == "MediaConfig" and "data" in data
     )
+
+
+register_deserialization(
+    is_type=_is_media_config,
+    deserialize=MediaConfig.from_dict,
+)
 
 
 class MediaConfigList(RootModel):
@@ -556,6 +634,19 @@ class MediaConfigList(RootModel):
 
 
 def _is_media_config_list(data):
+    """Check if data represents a list of MediaConfigs.
+
+    Parameters
+    ----------
+    data : Any
+        Data to check
+
+    Returns
+    -------
+    bool
+        True if data is a list of MediaConfig items (wrapped format)
+
+    """
     return isinstance(data, list) and all(_is_media_config(config) for config in data)
 
 

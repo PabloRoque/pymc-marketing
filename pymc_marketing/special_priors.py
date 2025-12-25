@@ -33,6 +33,8 @@ from pymc_extras.deserialize import deserialize, register_deserialization
 from pymc_extras.prior import Prior, VariableFactory, create_dim_handler, sample_prior
 from pytensor.tensor import TensorVariable
 
+from pymc_marketing.mmm.components.base import SerializableMixin
+
 
 class SpecialPrior(BaseModel, ABC):
     """A base class for specialized priors."""
@@ -393,7 +395,7 @@ register_deserialization(
 )
 
 
-class MaskedPrior(BaseModel):
+class MaskedPrior(BaseModel, SerializableMixin):
     """Create variables from a prior over only the active entries of a boolean mask.
 
     .. warning::
@@ -691,40 +693,35 @@ class MaskedPrior(BaseModel):
         full = flat_full[flat_mask].set(active_rv).reshape(self.mask.shape)
         return pm.Deterministic(name, full, dims=self.dims)
 
-    def to_dict(self) -> dict[str, Any]:
-        """Serialize MaskedPrior to a JSON-serializable dictionary.
+    @classmethod
+    def _get_field_serializers(cls) -> dict[str, Any]:
+        """Get field-specific serializers for MaskedPrior.
 
         Returns
         -------
-        dict
-            Dictionary containing the prior, mask, and active_dim.
+        dict[str, Any]
+            Mapping of field names to serializer functions for Prior and mask fields.
+
+        Notes
+        -----
+        The Prior field uses the standard Prior.to_dict() method.
+        The mask field is converted from xarray.DataArray to a list of booleans.
         """
-        # Store mask as a plain nested list of bools to avoid datetime coords serialization
-        mask_list = (
-            self.mask.values.astype(bool).tolist()
-            if hasattr(self.mask, "values")
-            else np.asarray(self.mask, dtype=bool).tolist()
-        )
         return {
-            "class": "MaskedPrior",
-            "data": {
-                "prior": self.prior.to_dict()
-                if hasattr(self.prior, "to_dict")
-                else None,
-                "mask": mask_list,
-                "mask_dims": list(self.dims),  # type: ignore[arg-type]
-                "active_dim": self.active_dim,
-            },
+            "prior": SerializableMixin.serialize_prior,
+            "mask": SerializableMixin.serialize_xarray,
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "MaskedPrior":
+    def from_dict(cls, data: dict[str, Any], strict: bool = True) -> "MaskedPrior":
         """Deserialize MaskedPrior from dictionary created by ``to_dict``.
 
         Parameters
         ----------
         data : dict
             Dictionary produced by :meth:`to_dict`.
+        strict : bool, optional
+            Whether to strictly validate the input. Default is True.
 
         Returns
         -------
@@ -738,8 +735,12 @@ class MaskedPrior(BaseModel):
             else payload.get("prior")
         )
         mask_vals = payload.get("mask")
-        # Fallback to provided dims or infer from prior if available
-        mask_dims = payload.get("mask_dims") or (getattr(prior, "dims", None) or ())
+        # Fallback to provided dims: try mask_dims first (old format), then dims (new format)
+        mask_dims = (
+            payload.get("mask_dims")
+            or payload.get("dims")
+            or (getattr(prior, "dims", None) or ())
+        )
         mask_da = xr.DataArray(np.asarray(mask_vals, dtype=bool), dims=tuple(mask_dims))
         active_dim = payload.get("active_dim")
         return cls(prior=prior, mask=mask_da, active_dim=active_dim)

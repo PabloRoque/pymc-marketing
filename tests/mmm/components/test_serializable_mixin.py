@@ -13,7 +13,11 @@
 #   limitations under the License.
 """Tests for SerializableMixin class."""
 
+from typing import Any
+
+import numpy as np
 import pytest
+import xarray as xr
 from pydantic import BaseModel, InstanceOf
 from pymc_extras.prior import Prior
 
@@ -312,3 +316,452 @@ class TestSerializableMixinConsistency:
         assert dict1["class"] == dict2["class"]
         assert dict1["class"] == "SimpleSerializable"
         assert dict2["class"] == "SimpleSerializable"
+
+
+class TestSerializeXarray:
+    """Tests for SerializableMixin.serialize_xarray() helper."""
+
+    def test_serialize_xarray_1d_array(self) -> None:
+        """Test serialize_xarray with 1D xarray.DataArray."""
+        arr = xr.DataArray([1, 2, 3], dims=["x"])
+        result = SerializableMixin.serialize_xarray(arr)
+
+        assert isinstance(result, list)
+        assert result == [1, 2, 3]
+
+    def test_serialize_xarray_2d_array(self) -> None:
+        """Test serialize_xarray with 2D xarray.DataArray."""
+        arr = xr.DataArray([[1, 2], [3, 4]], dims=["x", "y"])
+        result = SerializableMixin.serialize_xarray(arr)
+
+        assert isinstance(result, list)
+        assert result == [[1, 2], [3, 4]]
+
+    def test_serialize_xarray_with_named_dimensions(self) -> None:
+        """Test serialize_xarray preserves values despite named dimensions."""
+        arr = xr.DataArray(
+            [1.5, 2.5, 3.5],
+            dims=["time"],
+            coords={"time": [0, 1, 2]},
+        )
+        result = SerializableMixin.serialize_xarray(arr)
+
+        assert isinstance(result, list)
+        assert result == [1.5, 2.5, 3.5]
+
+    def test_serialize_xarray_with_float_values(self) -> None:
+        """Test serialize_xarray with float values."""
+        arr = xr.DataArray([1.1, 2.2, 3.3], dims=["x"])
+        result = SerializableMixin.serialize_xarray(arr)
+
+        assert result == [1.1, 2.2, 3.3]
+
+    def test_serialize_xarray_fallback_to_numpy(self) -> None:
+        """Test serialize_xarray fallback for numpy arrays."""
+        numpy_arr = np.array([1, 2, 3])
+        result = SerializableMixin.serialize_xarray(numpy_arr)
+
+        assert isinstance(result, list)
+        assert result == [1, 2, 3]
+
+    def test_serialize_xarray_empty_array(self) -> None:
+        """Test serialize_xarray with empty array."""
+        arr = xr.DataArray([], dims=["x"])
+        result = SerializableMixin.serialize_xarray(arr)
+
+        assert result == []
+
+    def test_serialize_xarray_single_value(self) -> None:
+        """Test serialize_xarray with single value."""
+        arr = xr.DataArray([42], dims=["x"])
+        result = SerializableMixin.serialize_xarray(arr)
+
+        assert result == [42]
+
+
+class TestSerializeNdarray:
+    """Tests for SerializableMixin.serialize_ndarray() helper."""
+
+    def test_serialize_ndarray_1d(self) -> None:
+        """Test serialize_ndarray with 1D numpy array."""
+        arr = np.array([1, 2, 3])
+        result = SerializableMixin.serialize_ndarray(arr)
+
+        assert isinstance(result, list)
+        assert result == [1, 2, 3]
+
+    def test_serialize_ndarray_2d(self) -> None:
+        """Test serialize_ndarray with 2D numpy array."""
+        arr = np.array([[1, 2], [3, 4]])
+        result = SerializableMixin.serialize_ndarray(arr)
+
+        assert isinstance(result, list)
+        assert result == [[1, 2], [3, 4]]
+
+    def test_serialize_ndarray_3d(self) -> None:
+        """Test serialize_ndarray with 3D numpy array."""
+        arr = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+        result = SerializableMixin.serialize_ndarray(arr)
+
+        assert isinstance(result, list)
+        assert len(result) == 2
+        assert result[0] == [[1, 2], [3, 4]]
+        assert result[1] == [[5, 6], [7, 8]]
+
+    def test_serialize_ndarray_float_dtype(self) -> None:
+        """Test serialize_ndarray with float dtype."""
+        arr = np.array([1.1, 2.2, 3.3])
+        result = SerializableMixin.serialize_ndarray(arr)
+
+        assert result == [1.1, 2.2, 3.3]
+
+    def test_serialize_ndarray_int_dtype(self) -> None:
+        """Test serialize_ndarray with int dtype."""
+        arr = np.array([1, 2, 3], dtype=np.int32)
+        result = SerializableMixin.serialize_ndarray(arr)
+
+        assert result == [1, 2, 3]
+
+    def test_serialize_ndarray_empty(self) -> None:
+        """Test serialize_ndarray with empty array."""
+        arr = np.array([])
+        result = SerializableMixin.serialize_ndarray(arr)
+
+        assert result == []
+
+    def test_serialize_ndarray_single_value(self) -> None:
+        """Test serialize_ndarray with single value array."""
+        arr = np.array([42])
+        result = SerializableMixin.serialize_ndarray(arr)
+
+        assert result == [42]
+
+    def test_serialize_ndarray_bool_dtype(self) -> None:
+        """Test serialize_ndarray with boolean dtype."""
+        arr = np.array([True, False, True])
+        result = SerializableMixin.serialize_ndarray(arr)
+
+        assert result == [True, False, True]
+
+
+class TestSerializeDictRecursive:
+    """Tests for SerializableMixin.serialize_dict_recursive() helper."""
+
+    def test_serialize_dict_recursive_with_integers(self) -> None:
+        """Test serialize_dict_recursive with integer values."""
+        d = {"a": 1, "b": 2, "c": 3}
+        result = SerializableMixin.serialize_dict_recursive(
+            d,
+            lambda x: x * 2,
+        )
+
+        assert result == {"a": 2, "b": 4, "c": 6}
+
+    def test_serialize_dict_recursive_with_strings(self) -> None:
+        """Test serialize_dict_recursive with string values."""
+        d = {"a": "hello", "b": "world"}
+        result = SerializableMixin.serialize_dict_recursive(
+            d,
+            lambda x: x.upper(),
+        )
+
+        assert result == {"a": "HELLO", "b": "WORLD"}
+
+    def test_serialize_dict_recursive_preserves_keys(self) -> None:
+        """Test that serialize_dict_recursive preserves all keys."""
+        d = {"key1": 1, "key2": 2, "key3": 3}
+        result = SerializableMixin.serialize_dict_recursive(
+            d,
+            lambda x: x + 10,
+        )
+
+        assert set(result.keys()) == {"key1", "key2", "key3"}
+
+    def test_serialize_dict_recursive_empty_dict(self) -> None:
+        """Test serialize_dict_recursive with empty dict."""
+        d = {}
+        result = SerializableMixin.serialize_dict_recursive(
+            d,
+            lambda x: x,
+        )
+
+        assert result == {}
+
+    def test_serialize_dict_recursive_with_prior_serializer(self) -> None:
+        """Test serialize_dict_recursive with Prior serializer."""
+        priors = {
+            "mu": Prior("Normal", mu=0, sigma=1),
+            "sigma": Prior("HalfNormal", sigma=1),
+        }
+        result = SerializableMixin.serialize_dict_recursive(
+            priors,
+            SerializableMixin.serialize_prior,
+        )
+
+        # Should have same keys
+        assert set(result.keys()) == {"mu", "sigma"}
+        # Values should be dicts (serialized Priors)
+        assert isinstance(result["mu"], dict)
+        assert isinstance(result["sigma"], dict)
+
+    def test_serialize_dict_recursive_single_entry(self) -> None:
+        """Test serialize_dict_recursive with single entry."""
+        d = {"only_key": 42}
+        result = SerializableMixin.serialize_dict_recursive(
+            d,
+            lambda x: x * 10,
+        )
+
+        assert result == {"only_key": 420}
+
+    def test_serialize_dict_recursive_does_not_modify_original(self) -> None:
+        """Test that serialize_dict_recursive doesn't modify original dict."""
+        d = {"a": 1, "b": 2}
+        original_copy = d.copy()
+        SerializableMixin.serialize_dict_recursive(
+            d,
+            lambda x: x * 100,
+        )
+
+        # Original should be unchanged
+        assert d == original_copy
+
+
+class TestGetFieldSerializersHook:
+    """Tests for SerializableMixin._get_field_serializers() hook."""
+
+    def test_default_get_field_serializers_returns_empty_dict(self) -> None:
+        """Test that default _get_field_serializers returns empty dict."""
+        serializers = SimpleSerializable._get_field_serializers()
+
+        assert isinstance(serializers, dict)
+        assert len(serializers) == 0
+
+    def test_override_get_field_serializers(self) -> None:
+        """Test that subclass can override _get_field_serializers."""
+
+        class CustomSerializable(BaseModel, SerializableMixin):
+            """Test class with custom field serializers."""
+
+            value: int
+
+            @classmethod
+            def _get_field_serializers(cls) -> dict:
+                return {"value": lambda x: x * 2}
+
+        serializers = CustomSerializable._get_field_serializers()
+
+        assert "value" in serializers
+        assert callable(serializers["value"])
+
+    def test_field_serializers_applied_in_to_dict(self) -> None:
+        """Test that field serializers are applied in to_dict()."""
+
+        class CustomSerializable(BaseModel, SerializableMixin):
+            """Test class with custom field serializers."""
+
+            value: int
+
+            @classmethod
+            def _get_field_serializers(cls) -> dict:
+                return {"value": lambda x: x * 2}
+
+        obj = CustomSerializable(value=21)
+        result = obj.to_dict()
+
+        # Value should be doubled by the serializer
+        assert result["data"]["value"] == 42
+
+    def test_multiple_field_serializers(self) -> None:
+        """Test class with multiple field serializers."""
+
+        class MultiFieldSerializable(BaseModel, SerializableMixin):
+            """Test class with multiple custom field serializers."""
+
+            a: int
+            b: int
+            c: int
+
+            @classmethod
+            def _get_field_serializers(cls) -> dict:
+                return {
+                    "a": lambda x: x * 2,
+                    "b": lambda x: x * 3,
+                    "c": lambda x: x * 4,
+                }
+
+        obj = MultiFieldSerializable(a=1, b=1, c=1)
+        result = obj.to_dict()
+
+        assert result["data"]["a"] == 2
+        assert result["data"]["b"] == 3
+        assert result["data"]["c"] == 4
+
+    def test_field_serializer_with_missing_field(self) -> None:
+        """Test that serializer for non-existent field is safely ignored."""
+
+        class CustomSerializable(BaseModel, SerializableMixin):
+            """Test class with serializer for non-existent field."""
+
+            value: int
+
+            @classmethod
+            def _get_field_serializers(cls) -> dict:
+                return {
+                    "value": lambda x: x * 2,
+                    "nonexistent": lambda x: x,  # This field doesn't exist
+                }
+
+        obj = CustomSerializable(value=10)
+        result = obj.to_dict()
+
+        # Should not raise an error, serializer is just skipped
+        assert result["data"]["value"] == 20
+
+
+class TestToDictWithFieldSerializers:
+    """Tests for to_dict with custom field serializers."""
+
+    def test_to_dict_applies_serializers_to_original_values(self) -> None:
+        """Test that to_dict applies serializers to original field values."""
+
+        class SerializableWithArray(BaseModel, SerializableMixin):
+            """Test class with numpy array field."""
+
+            data: Any
+
+            model_config = {"arbitrary_types_allowed": True}
+
+            @classmethod
+            def _get_field_serializers(cls) -> dict:
+                return {"data": SerializableMixin.serialize_ndarray}
+
+        arr = np.array([1, 2, 3])
+        obj = SerializableWithArray(data=arr)
+        result = obj.to_dict()
+
+        # Data should be serialized to list
+        assert result["data"]["data"] == [1, 2, 3]
+        assert isinstance(result["data"]["data"], list)
+
+    def test_to_dict_wraps_with_class_name(self) -> None:
+        """Test that to_dict includes class name in output."""
+
+        class CustomClass(BaseModel, SerializableMixin):
+            """Test class."""
+
+            value: int
+
+        obj = CustomClass(value=42)
+        result = obj.to_dict()
+
+        assert result["class"] == "CustomClass"
+
+    def test_to_dict_structure_has_class_and_data_keys(self) -> None:
+        """Test that to_dict output has required keys."""
+
+        class CustomClass(BaseModel, SerializableMixin):
+            """Test class."""
+
+            value: int
+
+        obj = CustomClass(value=42)
+        result = obj.to_dict()
+
+        assert "class" in result
+        assert "data" in result
+        assert len(result) == 2  # Should have exactly these two keys
+
+
+class TestFieldSerializersRoundtrip:
+    """Tests for roundtrips with field serializers."""
+
+    def test_roundtrip_with_numpy_array_serializer(self) -> None:
+        """Test roundtrip with numpy array field using serializer."""
+
+        class SerializableArray(BaseModel, SerializableMixin):
+            """Test class with numpy array field."""
+
+            name: str
+            data: Any
+
+            model_config = {"arbitrary_types_allowed": True}
+
+            @classmethod
+            def _get_field_serializers(cls) -> dict:
+                return {"data": SerializableMixin.serialize_ndarray}
+
+        arr = np.array([1.0, 2.0, 3.0])
+        original = SerializableArray(name="test", data=arr)
+        serialized = original.to_dict()
+
+        # Verify serialization
+        assert serialized["data"]["data"] == [1.0, 2.0, 3.0]
+
+        # Roundtrip back
+        restored = SerializableArray.from_dict(serialized)
+
+        assert restored.name == "test"
+        # Data should be a list now (deserialized)
+        assert restored.data == [1.0, 2.0, 3.0]
+
+    def test_roundtrip_with_xarray_serializer(self) -> None:
+        """Test roundtrip with xarray.DataArray field using serializer."""
+
+        class SerializableXarray(BaseModel, SerializableMixin):
+            """Test class with xarray field."""
+
+            name: str
+            data: Any
+
+            model_config = {"arbitrary_types_allowed": True}
+
+            @classmethod
+            def _get_field_serializers(cls) -> dict:
+                return {"data": SerializableMixin.serialize_xarray}
+
+        arr = xr.DataArray([1, 2, 3], dims=["x"])
+        original = SerializableXarray(name="test", data=arr)
+        serialized = original.to_dict()
+
+        # Verify serialization
+        assert serialized["data"]["data"] == [1, 2, 3]
+
+        # Roundtrip back
+        restored = SerializableXarray.from_dict(serialized)
+
+        assert restored.name == "test"
+        assert restored.data == [1, 2, 3]
+
+
+class TestBackwardCompatibility:
+    """Tests for backward compatibility with existing behavior."""
+
+    def test_classes_without_custom_serializers_work(self) -> None:
+        """Test that existing classes without custom serializers still work."""
+        obj = SimpleSerializable(name="test", value=42)
+        serialized = obj.to_dict()
+        restored = SimpleSerializable.from_dict(serialized)
+
+        assert restored == obj
+
+    def test_empty_field_serializers_dict_doesnt_affect_to_dict(self) -> None:
+        """Test that empty field serializers dict doesn't change behavior."""
+
+        class NoSerializers(BaseModel, SerializableMixin):
+            """Test class with no custom serializers."""
+
+            value: int
+
+        obj = NoSerializers(value=42)
+        result = obj.to_dict()
+
+        assert result["data"]["value"] == 42
+
+    def test_fourier_backward_compatibility(self) -> None:
+        """Test that YearlyFourier still works as before."""
+        fourier = YearlyFourier(n_order=3)
+        serialized = fourier.to_dict()
+        restored = YearlyFourier.from_dict(serialized)
+
+        assert restored.n_order == fourier.n_order

@@ -150,33 +150,39 @@ def test_apply_media_transformation(
 def test_media_transformation_deserialize() -> None:
     adstock = GeometricAdstock(l_max=10)
     saturation = LogisticSaturation()
-    data = {
-        "adstock": adstock.to_dict(),
-        "saturation": saturation.to_dict(),
-        "adstock_first": True,
-    }
+    media_transformation = MediaTransformation(
+        adstock=adstock,
+        saturation=saturation,
+        adstock_first=True,
+    )
 
-    media_transformation = deserialize(data)
-    assert isinstance(media_transformation, MediaTransformation)
+    # Serialize to wrapped format and deserialize
+    data = media_transformation.to_dict()
+
+    deserialized = deserialize(data)
+    assert isinstance(deserialized, MediaTransformation)
+    assert deserialized.adstock_first == media_transformation.adstock_first
 
 
 def test_media_config_list_deserialize() -> None:
     adstock = GeometricAdstock(l_max=10)
     saturation = LogisticSaturation()
-    data = [
-        {
-            "name": "online",
-            "columns": ["Facebook", "Instagram", "YouTube", "TikTok"],
-            "media_transformation": {
-                "adstock": adstock.to_dict(),
-                "saturation": saturation.to_dict(),
-                "adstock_first": True,
-            },
-        }
-    ]
+    media_config = MediaConfig(
+        name="online",
+        columns=["Facebook", "Instagram", "YouTube", "TikTok"],
+        media_transformation=MediaTransformation(
+            adstock=adstock,
+            saturation=saturation,
+            adstock_first=True,
+        ),
+    )
+    media_config_list = MediaConfigList([media_config])
 
-    media_config_list = deserialize(data)
-    assert isinstance(media_config_list, MediaConfigList)
+    # Serialize to list of wrapped dicts and deserialize
+    data = media_config_list.to_dict()
+
+    deserialized = deserialize(data)
+    assert isinstance(deserialized, MediaConfigList)
 
 
 def test_media_transformation_round_trip() -> None:
@@ -191,12 +197,19 @@ def test_media_transformation_round_trip() -> None:
 
     data = media_transformation.to_dict()
 
-    assert data == {
-        "adstock": adstock.to_dict(),
-        "saturation": saturation.to_dict(),
-        "adstock_first": True,
-        "dims": ("media",),
-    }
+    # Verify wrapped format
+    assert "class" in data
+    assert data["class"] == "MediaTransformation"
+    assert "data" in data
+
+    # Verify data contents
+    inner_data = data["data"]
+    assert inner_data["adstock"] == adstock.to_dict()
+    assert inner_data["saturation"] == saturation.to_dict()
+    assert inner_data["adstock_first"] is True
+    # dims is serialized as list by Pydantic, but deserialized as tuple
+    assert inner_data["dims"] == ["media"]
+
     recovered = MediaTransformation.from_dict(data)
     assert recovered.dims == ("media",)
 
