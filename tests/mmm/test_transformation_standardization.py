@@ -1,4 +1,4 @@
-#   Copyright 2022 - 2025 The PyMC Labs Developers
+#   Copyright 2022 - 2026 The PyMC Labs Developers
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -15,10 +15,9 @@
 
 This module tests the wrapped format serialization for all Transformation
 subclasses (Adstock, Saturation, Basis classes) to ensure:
-- to_dict() returns wrapped format: {"class": "ClassName", "version": 1, "data": {...}}
-- from_dict() handles both wrapped and flat formats (backward compatibility)
+- to_dict() returns wrapped format: {"class": "ClassName", "data": {...}}
+- from_dict() handles wrapped format
 - JSON round-trip serialization works
-- Factory functions work with both formats
 - Prior deserialization works correctly
 """
 
@@ -87,8 +86,6 @@ class TestAdstockWrappedFormat:
             "to_dict() should return wrapped format with 'class' key"
         )
         assert data["class"] == adstock_cls.__name__
-        assert "version" in data
-        assert data["version"] == 1
         assert "data" in data
         assert isinstance(data["data"], dict)
 
@@ -219,8 +216,6 @@ class TestSaturationWrappedFormat:
             "to_dict() should return wrapped format with 'class' key"
         )
         assert data["class"] == saturation_cls.__name__
-        assert "version" in data
-        assert data["version"] == 1
         assert "data" in data
         assert isinstance(data["data"], dict)
 
@@ -392,8 +387,6 @@ class TestBasisWrappedFormat:
         assert isinstance(data, dict)
         assert "class" in data
         assert data["class"] == basis_cls.__name__
-        assert "version" in data
-        assert data["version"] == 1
         assert "data" in data
         assert isinstance(data["data"], dict)
 

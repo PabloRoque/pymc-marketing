@@ -1,4 +1,4 @@
-#   Copyright 2022 - 2025 The PyMC Labs Developers
+#   Copyright 2022 - 2026 The PyMC Labs Developers
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -783,21 +783,16 @@ class Transformation(BaseModel, SerializableMixin):
     def to_dict(self) -> dict[str, Any]:
         """Convert the transformation to a dictionary in wrapped format.
 
-        Produces wrapped format with class metadata and serialized priors.
-        Format: {"class": "ClassName", "version": 1, "data": {...}}
+        Produces wrapped format: {"class": "ClassName", "data": {...}}
 
-        The "data" section contains:
-        - "lookup_name": The class lookup name (for type identification)
-        - "prefix": The variable prefix
-        - "priors": Dict of serialized priors
+        The "data" section contains all Pydantic fields plus serialized priors.
 
         Returns
         -------
-        dict
+        dict[str, Any]
             The dictionary defining the transformation with structure:
             {
                 "class": "ClassName",
-                "version": 1,
                 "data": {
                     "lookup_name": "...",
                     "prefix": "...",
@@ -812,7 +807,6 @@ class Transformation(BaseModel, SerializableMixin):
         """
         return {
             "class": self.__class__.__name__,
-            "version": 1,
             "data": {
                 "lookup_name": self.lookup_name,
                 "prefix": self.prefix,
@@ -832,19 +826,15 @@ class Transformation(BaseModel, SerializableMixin):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any], strict: bool = True) -> "Transformation":
-        """Deserialize from dictionary with defensive pattern.
-
-        Supports both wrapped format (new) and flat format (backward compat):
-        - Wrapped: {"class": "ClassName", "version": 1, "data": {...}}
-        - Flat: {"lookup_name": "...", "prefix": "...", "priors": {...}}
+        """Deserialize from wrapped format dictionary.
 
         Parameters
         ----------
         data : dict
-            Dictionary to deserialize in wrapped or flat format.
+            Wrapped format: {"class": "ClassName", "data": {...}}
         strict : bool, optional
-            Reserved for compatibility with SerializableMixin. Default is True.
-            Currently not used - Transformation always uses defensive deserialization.
+            Unused parameter kept for compatibility with SerializableMixin.
+            Default is True.
 
         Returns
         -------
@@ -852,43 +842,22 @@ class Transformation(BaseModel, SerializableMixin):
             The deserialized transformation.
 
         """
-        # Handle wrapped format: {"class": "ClassName", "version": 1, "data": {...}}
-        if "class" in data and "data" in data:
-            inner_data = (
-                data["data"].copy() if isinstance(data["data"], dict) else data["data"]
-            )
-        # Handle flat format (backward compatibility): {"lookup_name": "...", ...}
-        elif "lookup_name" in data or "prefix" in data:
-            inner_data = data.copy() if isinstance(data, dict) else data
-        else:
-            # Unknown format
-            inner_data = data.copy() if isinstance(data, dict) else data
+        inner_data = data["data"].copy()
 
-        # Deserialize priors if present
-        if "priors" in inner_data and isinstance(inner_data["priors"], dict):
+        # Deserialize priors
+        if "priors" in inner_data:
             inner_data["priors"] = {
-                key: deserialize(value) if isinstance(value, dict) else value
-                for key, value in inner_data["priors"].items()
+                key: deserialize(value) for key, value in inner_data["priors"].items()
             }
 
         # Remove lookup_name (not a constructor parameter)
         inner_data.pop("lookup_name", None)
 
-        # Filter to only valid model fields for this class OR known constructor params
-        # This allows subclasses to receive their specific parameters (l_max, normalize, mode, etc.)
-        # while preventing validation errors from unexpected keys
-        valid_fields = set(cls.model_fields.keys())
-        constructor_params = {
-            "priors",
-            "prefix",
-        }  # known constructor params not in model_fields
-        valid_fields.update(constructor_params)
+        # Filter to only valid model fields for this class
+        valid_fields = set(cls.model_fields.keys()) | {"priors", "prefix"}
         filtered_data = {k: v for k, v in inner_data.items() if k in valid_fields}
 
-        # Create instance with filtered parameters
-        instance = cls(**filtered_data)
-
-        return instance
+        return cls(**filtered_data)
 
     def update_priors(self, priors: dict[str, Prior]) -> None:
         """Update the priors for a function after initialization.

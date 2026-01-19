@@ -1,4 +1,4 @@
-#   Copyright 2022 - 2025 The PyMC Labs Developers
+#   Copyright 2022 - 2026 The PyMC Labs Developers
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -92,7 +92,7 @@ This module provides event transformations for use in Marketing Mix Models.
 
 """
 
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -106,6 +106,7 @@ from pydantic import (
     Field,
     InstanceOf,
     field_serializer,
+    field_validator,
     model_validator,
     validate_call,
 )
@@ -166,44 +167,27 @@ class Basis(Transformation, metaclass=BasisMeta):  # type: ignore[metaclass]
 
 
 def basis_from_dict(data: dict) -> Basis:
-    """Create a basis transformation from a dictionary.
+    """Deserialize a basis transformation from wrapped format.
 
-    Handles both wrapped format (new) and flat format (backward compat):
-    - Wrapped: {"class": "BasisClassName", "version": 1, "data": {...}}
-    - Flat: {"lookup_name": "...", "prefix": "...", "priors": {...}}
+    Parameters
+    ----------
+    data : dict
+        Wrapped format: {"class": "BasisClassName", "data": {...}}
+
+    Returns
+    -------
+    Basis
+        The deserialized basis transformation.
+
     """
-    # Handle wrapped format
-    if "class" in data and "data" in data:
-        inner_data = data["data"].copy()
-        lookup_name = inner_data.pop("lookup_name")
-    # Handle flat format (backward compatibility)
-    else:
-        inner_data = data.copy()
-        lookup_name = inner_data.pop("lookup_name")  # type: ignore[misc]
-
-    # Get class from registry by lookup_name
-    cls = BASIS_TRANSFORMATIONS[lookup_name]
-
-    # Deserialize priors if present
-    if "priors" in inner_data and isinstance(inner_data["priors"], dict):
-        inner_data["priors"] = {
-            k: deserialize(v) for k, v in inner_data["priors"].items()
-        }
-
-    return cls(**inner_data)
+    return Basis.from_dict(data)
 
 
 def _is_basis(data):
-    """Check if data represents a Basis transformation.
-
-    Supports both wrapped and flat formats.
-    """
-    # Wrapped format: {"class": "...", "data": {"lookup_name": "..."}}
-    if "class" in data and "data" in data:
-        if "lookup_name" in data["data"]:
-            return data["data"]["lookup_name"] in BASIS_TRANSFORMATIONS
-    # Flat format: {"lookup_name": "..."}
-    return "lookup_name" in data and data["lookup_name"] in BASIS_TRANSFORMATIONS
+    """Check if data represents a Basis transformation."""
+    return "class" in data and data.get("class") in [
+        cls.__name__ for cls in BASIS_TRANSFORMATIONS.values()
+    ]
 
 
 register_deserialization(
@@ -229,6 +213,30 @@ class EventEffect(BaseModel):
     def serialize_effect_size(self, value: Prior) -> dict:
         """Serialize Prior to dict for JSON mode."""
         return value.to_dict()
+
+    @field_validator("basis", mode="before")
+    @classmethod
+    def validate_basis(cls, v: Any) -> Basis:
+        """Deserialize Basis dict to Basis object.
+
+        If v is a dict with "class" key, deserialize it.
+        Otherwise return as-is (already a Basis object).
+        """
+        if isinstance(v, dict) and "class" in v:
+            return deserialize(v)
+        return v
+
+    @field_validator("effect_size", mode="before")
+    @classmethod
+    def validate_effect_size(cls, v: Any) -> Prior:
+        """Deserialize Prior dict to Prior object.
+
+        If v is a dict with "class" key, deserialize it.
+        Otherwise return as-is (already a Prior object).
+        """
+        if isinstance(v, dict) and "class" in v:
+            return deserialize(v)
+        return v
 
     @model_validator(mode="before")
     def _dims_to_tuple(self):
@@ -259,7 +267,13 @@ class EventEffect(BaseModel):
         )
 
     def to_dict(self) -> dict:
-        """Convert the event effect to a dictionary."""
+        """Convert the event effect to a dictionary.
+
+        Returns
+        -------
+        dict
+            The dictionary in wrapped format: {"class": "EventEffect", "data": {...}}
+        """
         return {
             "class": "EventEffect",
             "data": {
@@ -271,41 +285,24 @@ class EventEffect(BaseModel):
 
     @classmethod
     def from_dict(cls, data: dict) -> "EventEffect":
-        """Create an event effect from a dictionary.
-
-        Supports both wrapped and flat (inner) formats for backward compatibility.
+        """Deserialize event effect from wrapped format.
 
         Parameters
         ----------
         data : dict
-            The data to create the object from. Can be either:
-            - Wrapped format: ``{"class": "EventEffect", "data": {...}}``
-            - Flat format (inner data): ``{"basis": {...}, "effect_size": {...}, ...}``
+            Dictionary in wrapped format: {"class": "EventEffect", "data": {...}}
 
         Returns
         -------
         EventEffect
-            The object created from the data.
+            The deserialized event effect.
 
         """
-        # Handle both wrapped and flat formats
-        if "class" in data and "data" in data:
-            # Wrapped format
-            inner_data = data["data"]
-        elif "basis" in data or "effect_size" in data:
-            # Flat/inner format (direct field access)
-            inner_data = data
-        else:
-            raise ValueError(
-                f"Invalid serialization format. Expected wrapped format "
-                f"{{'class': 'EventEffect', 'data': {{...}}}} or flat format "
-                f"{{'basis': ..., 'effect_size': ..., ...}}, but got: {data}"
-            )
+        inner_data = data["data"].copy()
 
-        # Defensively deserialize Prior/Basis fields if they are dicts
-        inner_data = inner_data.copy() if isinstance(inner_data, dict) else inner_data
+        # Deserialize complex fields
         for key in ["basis", "effect_size"]:
-            if key in inner_data and isinstance(inner_data[key], dict):
+            if isinstance(inner_data.get(key), dict) and "class" in inner_data[key]:
                 inner_data[key] = deserialize(inner_data[key])
 
         return cls.model_validate(inner_data)
@@ -313,12 +310,12 @@ class EventEffect(BaseModel):
 
 def _is_event_effect(data: dict) -> bool:
     """Check if the data is an event effect."""
-    return data["class"] == "EventEffect"
+    return "class" in data and data.get("class") == "EventEffect"
 
 
 register_deserialization(
     is_type=_is_event_effect,
-    deserialize=lambda data: EventEffect.from_dict(data["data"]),
+    deserialize=lambda data: EventEffect.from_dict(data),
 )
 
 

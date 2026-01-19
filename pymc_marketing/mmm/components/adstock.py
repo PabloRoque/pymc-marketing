@@ -1,4 +1,4 @@
-#   Copyright 2022 - 2025 The PyMC Labs Developers
+#   Copyright 2022 - 2026 The PyMC Labs Developers
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ import numpy as np
 import pytensor.tensor as pt
 import xarray as xr
 from pydantic import Field, field_serializer
-from pymc_extras.deserialize import deserialize, register_deserialization
+from pymc_extras.deserialize import register_deserialization
 from pymc_extras.prior import Prior
 
 from pymc_marketing.mmm.components.base import (
@@ -408,44 +408,27 @@ class NoAdstock(AdstockTransformation):
 
 
 def adstock_from_dict(data: dict) -> AdstockTransformation:
-    """Create an adstock transformation from a dictionary.
+    """Deserialize an adstock transformation from wrapped format.
 
-    Handles both wrapped format (new) and flat format (backward compat):
-    - Wrapped: {"class": "AdstockClassName", "version": 1, "data": {...}}
-    - Flat: {"lookup_name": "...", "prefix": "...", "priors": {...}}
+    Parameters
+    ----------
+    data : dict
+        Wrapped format: {"class": "AdstockClassName", "data": {...}}
+
+    Returns
+    -------
+    AdstockTransformation
+        The deserialized adstock transformation.
+
     """
-    # Handle wrapped format
-    if "class" in data and "data" in data:
-        inner_data = data["data"].copy()
-        lookup_name = inner_data.pop("lookup_name")
-    # Handle flat format (backward compatibility)
-    else:
-        inner_data = data.copy()
-        lookup_name = inner_data.pop("lookup_name")  # type: ignore[misc]
-
-    # Get class from registry by lookup_name
-    cls = ADSTOCK_TRANSFORMATIONS[lookup_name]
-
-    # Deserialize priors if present
-    if "priors" in inner_data and isinstance(inner_data["priors"], dict):
-        inner_data["priors"] = {
-            k: deserialize(v) for k, v in inner_data["priors"].items()
-        }
-
-    return cls(**inner_data)
+    return AdstockTransformation.from_dict(data)
 
 
 def _is_adstock(data):
-    """Check if data represents an Adstock transformation.
-
-    Supports both wrapped and flat formats.
-    """
-    # Wrapped format: {"class": "...", "data": {"lookup_name": "..."}}
-    if "class" in data and "data" in data:
-        if "lookup_name" in data["data"]:
-            return data["data"]["lookup_name"] in ADSTOCK_TRANSFORMATIONS
-    # Flat format: {"lookup_name": "..."}
-    return "lookup_name" in data and data["lookup_name"] in ADSTOCK_TRANSFORMATIONS
+    """Check if data represents an Adstock transformation."""
+    return "class" in data and data.get("class") in [
+        cls.__name__ for cls in ADSTOCK_TRANSFORMATIONS.values()
+    ]
 
 
 register_deserialization(
