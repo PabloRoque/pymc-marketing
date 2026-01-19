@@ -114,21 +114,6 @@ class TestAdstockWrappedFormat:
         assert restored.l_max == adstock.l_max
         assert restored.lookup_name == adstock.lookup_name
 
-    def test_adstock_from_dict_flat_backward_compat(self) -> None:
-        """Test that from_dict() handles old flat format."""
-        # Old flat format
-        old_data = {
-            "lookup_name": "geometric",
-            "prefix": "adstock",
-            "priors": {},
-            "l_max": 5,
-        }
-
-        # Should still load (backward compatibility)
-        adstock = GeometricAdstock.from_dict(old_data)
-        assert isinstance(adstock, GeometricAdstock)
-        assert adstock.l_max == 5
-
     @pytest.mark.parametrize(
         "adstock_cls,kwargs",
         [
@@ -171,19 +156,6 @@ class TestAdstockWrappedFormat:
         restored = adstock_from_dict(data)
         assert isinstance(restored, adstock_cls)
         assert restored.lookup_name == lookup_name
-
-    def test_adstock_factory_flat_backward_compat(self) -> None:
-        """Test that factory function handles old flat format."""
-        old_data = {
-            "lookup_name": "geometric",
-            "prefix": "adstock",
-            "priors": {},
-            "l_max": 5,
-        }
-
-        # Factory should still work with flat format
-        adstock = adstock_from_dict(old_data)
-        assert isinstance(adstock, GeometricAdstock)
 
 
 class TestSaturationWrappedFormat:
@@ -252,36 +224,6 @@ class TestSaturationWrappedFormat:
         assert restored.lookup_name == saturation.lookup_name
 
     @pytest.mark.parametrize(
-        "saturation_cls,lookup_name",
-        [
-            (LogisticSaturation, "logistic"),
-            (InverseScaledLogisticSaturation, "inverse_scaled_logistic"),
-            (TanhSaturation, "tanh"),
-            (TanhSaturationBaselined, "tanh_baselined"),
-            (MichaelisMentenSaturation, "michaelis_menten"),
-            (HillSaturation, "hill"),
-            (HillSaturationSigmoid, "hill_sigmoid"),
-            (RootSaturation, "root"),
-            (NoSaturation, "no_saturation"),
-        ],
-    )
-    def test_saturation_from_dict_flat_backward_compat(
-        self, saturation_cls: type[SaturationTransformation], lookup_name: str
-    ) -> None:
-        """Test that from_dict() handles old flat format for backward compatibility."""
-        # Old flat format
-        old_data = {
-            "lookup_name": lookup_name,
-            "prefix": "saturation",
-            "priors": {},
-        }
-
-        # Should still load (backward compatibility)
-        saturation = saturation_cls.from_dict(old_data)
-        assert isinstance(saturation, saturation_cls)
-        assert saturation.lookup_name == lookup_name
-
-    @pytest.mark.parametrize(
         "saturation_cls",
         [
             LogisticSaturation,
@@ -337,33 +279,6 @@ class TestSaturationWrappedFormat:
         assert isinstance(restored, saturation_cls)
         assert restored.lookup_name == lookup_name
 
-    @pytest.mark.parametrize(
-        "lookup_name",
-        [
-            "logistic",
-            "inverse_scaled_logistic",
-            "tanh",
-            "tanh_baselined",
-            "michaelis_menten",
-            "hill",
-            "hill_sigmoid",
-            "root",
-            "no_saturation",
-        ],
-    )
-    def test_saturation_factory_flat_backward_compat(self, lookup_name: str) -> None:
-        """Test that factory function handles old flat format."""
-        old_data = {
-            "lookup_name": lookup_name,
-            "prefix": "saturation",
-            "priors": {},
-        }
-
-        # Factory should still work with flat format
-        saturation = saturation_from_dict(old_data)
-        assert isinstance(saturation, SaturationTransformation)
-        assert saturation.lookup_name == lookup_name
-
 
 class TestBasisWrappedFormat:
     """Test wrapped format serialization for Basis classes."""
@@ -415,29 +330,6 @@ class TestBasisWrappedFormat:
         assert restored.lookup_name == basis.lookup_name
 
     @pytest.mark.parametrize(
-        "basis_cls,lookup_name",
-        [
-            (GaussianBasis, "gaussian"),
-            (HalfGaussianBasis, "half_gaussian"),
-            (AsymmetricGaussianBasis, "asymmetric_gaussian"),
-        ],
-    )
-    def test_basis_from_dict_flat_backward_compat(
-        self, basis_cls: type[Basis], lookup_name: str
-    ) -> None:
-        """Test backward compatibility with flat format."""
-        old_data = {
-            "lookup_name": lookup_name,
-            "prefix": "basis",
-            "priors": {},
-        }
-
-        # Should still load (backward compatibility)
-        basis = basis_cls.from_dict(old_data)
-        assert isinstance(basis, basis_cls)
-        assert basis.lookup_name == lookup_name
-
-    @pytest.mark.parametrize(
         "basis_cls",
         [
             GaussianBasis,
@@ -480,26 +372,3 @@ class TestBasisWrappedFormat:
         restored = basis_from_dict(data)
         assert isinstance(restored, basis_cls)
         assert restored.lookup_name == lookup_name
-
-    @pytest.mark.parametrize(
-        "lookup_name",
-        [
-            "gaussian",
-            "half_gaussian",
-            "asymmetric_gaussian",
-        ],
-    )
-    def test_basis_factory_flat_backward_compat(self, lookup_name: str) -> None:
-        """Test that factory function handles old flat format."""
-        from pymc_marketing.mmm.events import basis_from_dict
-
-        old_data = {
-            "lookup_name": lookup_name,
-            "prefix": "basis",
-            "priors": {},
-        }
-
-        # Factory should still work with flat format
-        basis = basis_from_dict(old_data)
-        assert isinstance(basis, Basis)
-        assert basis.lookup_name == lookup_name
