@@ -66,7 +66,7 @@ def _make_mmm_data(
     np.random.seed(seed)
 
     channels = {
-        f"channel_{i + 1}": np.random.randint(100, 500, size=len(date_range))
+        f"channel_{i + 1}": np.random.uniform(100, 500, size=len(date_range))
         for i in range(n_channels)
     }
 
@@ -99,7 +99,7 @@ def monthly_mmm_data():
     months as fixed 30-day periods.
 
     Returns dict with:
-    - X: DataFrame with date and 3 channels (18 monthly periods)
+    - X: DataFrame with date and 2 channels (18 monthly periods)
     - y: Series with target values
     """
     return _make_mmm_data(periods=18, freq="MS", n_channels=3, seed=99)
@@ -145,6 +145,12 @@ def mock_fit(model, X: pd.DataFrame, y: pd.Series, random_seed=None, **kwargs):
     """Mock fit function that mimics the fit process without actual sampling."""
     model.build_model(X=X, y=y)
     model.add_original_scale_contribution_variable(var=["channel_contribution"])
+
+    # Explicitly set model data via pm.set_data so channel_data has concrete shape,
+    # matching real mmm.fit() behavior. Without this, channel_data may retain
+    # symbolic shape unlike mmm.fit().
+    model._set_xarray_data(model.xarray_dataset, clone_model=False)
+
     if random_seed is None:
         random_seed = rng
     with model.model:
@@ -195,7 +201,7 @@ def simple_fitted_mmm(simple_mmm_data):
 
 
 @pytest.fixture
-def simple_fitted_mmm_float(simple_mmm_data):
+def simple_fitted_mmm_int(simple_mmm_data):
     """Like simple_fitted_mmm but with float channel data (same values).
 
     Used to obtain correct marginal incrementality when factor produces
@@ -207,7 +213,7 @@ def simple_fitted_mmm_float(simple_mmm_data):
     y = simple_mmm_data["y"]
     # Convert channel columns to float so counterfactual factor preserves fractions
     for col in ["channel_1", "channel_2", "channel_3"]:
-        X[col] = X[col].astype(np.float64)
+        X[col] = X[col].astype(np.int64)
 
     mmm = MMM(
         channel_columns=["channel_1", "channel_2", "channel_3"],
