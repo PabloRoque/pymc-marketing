@@ -13,6 +13,7 @@ pymc_marketing/mmm/budget_optimizer.py
   s_6f9e3d2cdd0786::t_2d8d39050faf8c 1865
   s_6f9e3d2cdd0786::t_bd37f79c820921 1879-1881
   s_6f9e3d2cdd0786::t_d9daedb98e4493 2103-2115,2121-2124
+  s_6f9e3d2cdd0786::t_2d6d8a27325fb5 1898-1899,1902-1904,1907-1914,1918-1922,1925
 pymc_marketing/mmm/optimization_variables.py
   s_6f9e3d2cdd0786::t_71be7a4fa630c9 339-401,403-421,424-429,431-435
   s_6f9e3d2cdd0786::t_3ddc5e734eed00 402,422-423
