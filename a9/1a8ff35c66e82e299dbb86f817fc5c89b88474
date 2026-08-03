@@ -9,6 +9,10 @@ pymc_marketing/mmm/budget_optimizer.py
   s_6f9e3d2cdd0786::t_9f2b76aee8d25a 2090-2094
   s_6f9e3d2cdd0786::t_7ee97e926e2f6c 1362-1368
   s_6f9e3d2cdd0786::t_8a3072422e26d9 1593
+  s_6f9e3d2cdd0786::t_0c0bbcb557c92e 1875-1876
+  s_6f9e3d2cdd0786::t_2d8d39050faf8c 1857
+  s_6f9e3d2cdd0786::t_bd37f79c820921 1871-1873
+  s_6f9e3d2cdd0786::t_d9daedb98e4493 2077-2089,2095-2098
 pymc_marketing/mmm/optimization_variables.py
   s_6f9e3d2cdd0786::t_71be7a4fa630c9 339-401,403-421,424-429,431-435
   s_6f9e3d2cdd0786::t_3ddc5e734eed00 402,422-423
@@ -18,6 +22,7 @@ pymc_marketing/mmm/optimization_variables.py
 tests/mmm/test_optimization_variables.py
   s_6f9e3d2cdd0786::t_b0c7f23efe75fc 19
   s_6f9e3d2cdd0786::t_8d1db83de2644a 201-270
+  s_6f9e3d2cdd0786::t_0e2d00eaf3b4e5 271-272
 ---
 {
   "schema_version": "authorship/3.0.0",
