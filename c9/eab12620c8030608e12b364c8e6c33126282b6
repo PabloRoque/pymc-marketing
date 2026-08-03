@@ -1,0 +1,37 @@
+pymc_marketing/mmm/budget_optimizer.py
+  s_6f9e3d2cdd0786::t_899ac2b0e14e57 1493-1529,1531-1533,1552-1592
+  s_6f9e3d2cdd0786::t_27d7bf4929a83c 1833-1844,1856-1857,1861-1864,1869-1883,1885-1893
+  s_6f9e3d2cdd0786::t_45377646486a35 254
+  s_6f9e3d2cdd0786::t_5b6f0a1a3309e7 1884
+  s_6f9e3d2cdd0786::t_953784a0689084 265
+  s_6f9e3d2cdd0786::t_32b143d68878dd 1171-1192
+  s_6f9e3d2cdd0786::t_494b84aaeabc02 2112,2118
+  s_6f9e3d2cdd0786::t_9f2b76aee8d25a 2039-2053
+  s_6f9e3d2cdd0786::t_7ee97e926e2f6c 1362-1368
+  s_6f9e3d2cdd0786::t_8a3072422e26d9 1593
+pymc_marketing/mmm/optimization_variables.py
+  s_6f9e3d2cdd0786::t_71be7a4fa630c9 329-391,393-411,414-419,421-425
+  s_6f9e3d2cdd0786::t_3ddc5e734eed00 392,412-413
+  s_6f9e3d2cdd0786::t_da695b56015e25 44
+  s_6f9e3d2cdd0786::t_4ccbad92fd027f 34
+  s_6f9e3d2cdd0786::t_5e8d9a26ea46ec 420
+tests/mmm/test_optimization_variables.py
+  s_6f9e3d2cdd0786::t_b0c7f23efe75fc 19
+  s_6f9e3d2cdd0786::t_8d1db83de2644a 200-269
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "c9eab12620c8030608e12b364c8e6c33126282b6",
+  "prompts": {},
+  "sessions": {
+    "s_6f9e3d2cdd0786": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c1f2c1c-b754-45cf-927a-0175eba13c78",
+        "model": "claude-fable-5"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
