@@ -2,6 +2,8 @@ pymc_marketing/mmm/budget_optimizer.py
   s_733fa6de6a6fcf::t_168afed0b26e18 1202
 pymc_marketing/mmm/mmm.py
   s_733fa6de6a6fcf::t_99f560c1754d3c 1648,1930-1931,3013
+tests/mmm/test_budget_optimizer.py
+  s_6f9e3d2cdd0786::t_f2a2e45bb718a1 588-589,607,611,617,621,638-639
 ---
 {
   "schema_version": "authorship/3.0.0",
@@ -14,6 +16,14 @@ pymc_marketing/mmm/mmm.py
     }
   },
   "sessions": {
+    "s_6f9e3d2cdd0786": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c1f2c1c-b754-45cf-927a-0175eba13c78",
+        "model": "claude-fable-5"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    },
     "s_733fa6de6a6fcf": {
       "agent_id": {
         "tool": "claude",
