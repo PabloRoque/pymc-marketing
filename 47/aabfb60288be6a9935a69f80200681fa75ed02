@@ -8,6 +8,7 @@ tests/mmm/test_budget_optimizer.py
   s_6f9e3d2cdd0786::t_ec1fd3291919d2 29
   s_6f9e3d2cdd0786::t_883c389ce1572d 1170-1251,1598,1644,1682,1784-1785,1787,1809,1846
   s_6f9e3d2cdd0786::t_0738cc74129571 1168-1169
+  s_6f9e3d2cdd0786::t_a6e3bbd17d28a9 1877-1878
 pymc_marketing/mmm/additive_effect.py
   s_6f9e3d2cdd0786::t_a9c7031ec22784 403-455
 pymc_marketing/mmm/link.py
