@@ -1,0 +1,21 @@
+pymc_marketing/mmm/budget_optimizer.py
+  s_6f9e3d2cdd0786::t_be7f148bf00db9 1817
+pymc_marketing/mmm/optimization_variables.py
+  s_6f9e3d2cdd0786::t_ac760c7534ce78 19,343,455
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "2cb9410c47e97a66a18683fb6f0450cbb2b91c4f",
+  "prompts": {},
+  "sessions": {
+    "s_6f9e3d2cdd0786": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c1f2c1c-b754-45cf-927a-0175eba13c78",
+        "model": "claude-opus-5"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
