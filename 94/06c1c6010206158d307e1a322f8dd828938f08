@@ -1,0 +1,30 @@
+pymc_marketing/mmm/mmm.py
+  s_6f9e3d2cdd0786::t_e896ef46ff23e9 2434-2445
+tests/mmm/test_budget_optimizer_mmm.py
+  s_6f9e3d2cdd0786::t_d026b597d82559 1838-1840
+  s_6f9e3d2cdd0786::t_94fe64b101586c 20,1847-1849,1852-1854
+  s_6f9e3d2cdd0786::t_600bce96ceac92 24,27,1761-1837,1841-1846,1850-1851
+tests/mmm/test_mmm.py
+  s_6f9e3d2cdd0786::t_a66ee4b6f705eb 949-952
+pymc_marketing/mmm/link.py
+  s_6f9e3d2cdd0786::t_e896ef46ff23e9 101-105,168-210
+  s_6f9e3d2cdd0786::t_abbd4197197459 211
+tests/mmm/test_link.py
+  s_6f9e3d2cdd0786::t_e896ef46ff23e9 19-20,27,874-970
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "9406c1c6010206158d307e1a322f8dd828938f08",
+  "prompts": {},
+  "sessions": {
+    "s_6f9e3d2cdd0786": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c1f2c1c-b754-45cf-927a-0175eba13c78",
+        "model": "claude-opus-5"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
