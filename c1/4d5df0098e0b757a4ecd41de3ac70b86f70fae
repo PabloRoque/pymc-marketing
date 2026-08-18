@@ -1,0 +1,20 @@
+tests/mmm/test_utils.py
+  s_6f9e3d2cdd0786::t_499b87656df043 932-942,1015-1068,1070-1073
+  s_6f9e3d2cdd0786::t_dea23252a9b119 1069
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c14d5df0098e0b757a4ecd41de3ac70b86f70fae",
+  "prompts": {},
+  "sessions": {
+    "s_6f9e3d2cdd0786": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c1f2c1c-b754-45cf-927a-0175eba13c78",
+        "model": "claude-opus-5"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
