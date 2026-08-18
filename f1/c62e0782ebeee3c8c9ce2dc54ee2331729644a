@@ -1,0 +1,24 @@
+pymc_marketing/mmm/mmm.py
+  s_6f9e3d2cdd0786::t_6f8db7128d822f 2598-2633,2659,2666-2667,2790,2833
+pymc_marketing/mmm/utils.py
+  s_6f9e3d2cdd0786::t_734af9cc415655 237,267-276,352-358
+tests/mmm/test_utils.py
+  s_6f9e3d2cdd0786::t_2aa88087c09689 1028,1031,1062,1065,1195,1202,1205,1211,1216,1236
+  s_6f9e3d2cdd0786::t_18f65b6bbd75f0 23,1237-1277
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "f1c62e0782ebeee3c8c9ce2dc54ee2331729644a",
+  "prompts": {},
+  "sessions": {
+    "s_6f9e3d2cdd0786": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c1f2c1c-b754-45cf-927a-0175eba13c78",
+        "model": "claude-opus-5"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
