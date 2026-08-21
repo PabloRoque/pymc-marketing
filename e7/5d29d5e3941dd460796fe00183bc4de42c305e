@@ -1,0 +1,19 @@
+docs/source/notebooks/mmm/mmm_funnel_mueffect_advanced.ipynb
+  s_6f9e3d2cdd0786::t_9e42a6ff9832e8 11341-11342
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "e75d29d5e3941dd460796fe00183bc4de42c305e",
+  "prompts": {},
+  "sessions": {
+    "s_6f9e3d2cdd0786": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c1f2c1c-b754-45cf-927a-0175eba13c78",
+        "model": "claude-opus-5"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
