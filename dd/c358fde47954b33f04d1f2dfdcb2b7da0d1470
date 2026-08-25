@@ -1,0 +1,24 @@
+pymc_marketing/mmm/campaign_media.py
+  s_55d378dab98863::t_f167b6c52d18d3 80-94,107-109,162-190,223-230
+  s_55d378dab98863::t_9db37d87d0fda5 1-79,95-106,110-161,191-222,231-247
+tests/mmm/test_campaign_media.py
+  s_55d378dab98863::t_29834d20381cf8 154-224
+  s_55d378dab98863::t_611fffd179f652 21,151
+  s_55d378dab98863::t_31ea6e3ed3f172 1-20,22-150,152-153
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "ddc358fde47954b33f04d1f2dfdcb2b7da0d1470",
+  "prompts": {},
+  "sessions": {
+    "s_55d378dab98863": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d5b798c-e92f-4766-8486-4f7ec004fed0",
+        "model": "claude-fable-5"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
