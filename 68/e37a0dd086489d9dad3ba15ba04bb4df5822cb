@@ -1,0 +1,46 @@
+docs/source/notebooks/mmm/mmm_campaign_media.ipynb
+  s_55d378dab98863::t_02e0a94402cd16 1-1471,1473-1548,1550-1564,1566-1725
+  s_55d378dab98863::t_db864708287000 1472,1549,1565
+tests/mmm/test_campaign_media_integration.py
+  s_55d378dab98863::t_79c6f73c6a3444 1-43,45-69,73-180
+  s_55d378dab98863::t_793eeaa5eeaaee 250-267
+  s_55d378dab98863::t_f68b6929b813cc 44,70-72
+  s_55d378dab98863::t_09daac4065d62d 181-242
+  s_55d378dab98863::t_c8435cf1c68013 243-249
+docs/source/gallery/gallery.md
+  s_55d378dab98863::t_8a59f98b6d668e 264-268
+docs/source/gallery/gallery.yaml
+  s_55d378dab98863::t_8a59f98b6d668e 109-110
+tests/mmm/test_campaign_media.py
+  s_55d378dab98863::t_31ea6e3ed3f172 1-20,22-128,130-138,191-200,202-203
+  s_55d378dab98863::t_cdc33b7458fe20 275-337
+  s_55d378dab98863::t_41617f710fee88 189-190,338-358
+  s_55d378dab98863::t_d5be0b18f0846d 129,139-188
+  s_55d378dab98863::t_611fffd179f652 21,201
+  s_55d378dab98863::t_29834d20381cf8 204-274
+pymc_marketing/mmm/campaign_media.py
+  s_55d378dab98863::t_6ec9a3f055914a 303-308
+  s_55d378dab98863::t_5ca78b349ebd3e 225,309-310,312-313
+  s_55d378dab98863::t_9db37d87d0fda5 1-42,45-49,51-56,76-103,127-138,143-159,172-199,226-231,261-283,295-301,311,320-360,365-392,421-459
+  s_55d378dab98863::t_793eeaa5eeaaee 50,361-364,393-420
+  s_55d378dab98863::t_4d0b4f8f038bf3 43,160-171
+  s_55d378dab98863::t_a6ddf1e93cc87d 57-75,104-111,139,200-224,284-294
+  s_55d378dab98863::t_cdc33b7458fe20 44
+  s_55d378dab98863::t_f167b6c52d18d3 112-126,140-142,232-260,302,314-319
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "68e37a0dd086489d9dad3ba15ba04bb4df5822cb",
+  "prompts": {},
+  "sessions": {
+    "s_55d378dab98863": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d5b798c-e92f-4766-8486-4f7ec004fed0",
+        "model": "claude-fable-5"
+      },
+      "human_author": null
+    }
+  }
+}
