@@ -1,0 +1,45 @@
+scripts/experiments/campaign_media_optimizer_stress.py
+  s_55d378dab98863::t_f68b6929b813cc 68-71,102-104,132-134,140-142,144-146,149-157,161-163,174-183,208-210,212-214,226-228,230-233,241-245,252-253,256-260,263-267
+  s_55d378dab98863::t_daddaf6862e638 1-67,72-101,105-131,135-139,143,147-148,158-160,164-173,184-207,211,215-225,229,234-240,246-251,254-255,261-262
+scripts/investigate_issue_2519.py
+  s_55d378dab98863::t_d4791034e763df 1-466
+scripts/experiments/campaign_media_recovery.py
+  s_55d378dab98863::t_0680f1a5a66fcd 1-90,98-117,121-163,174-183,189,195-215,222-228
+  s_55d378dab98863::t_f68b6929b813cc 91-97,118-120,164-173,184-188,190-194,216-221
+pymc_marketing/mmm/campaign_media.py
+  s_55d378dab98863::t_f167b6c52d18d3 111-125,139-141,231-259,301,313-318
+  s_55d378dab98863::t_5ca78b349ebd3e 224,308-309,311-312
+  s_55d378dab98863::t_a6ddf1e93cc87d 56-74,103-110,138,199-223,283-293
+  s_55d378dab98863::t_cdc33b7458fe20 44
+  s_55d378dab98863::t_9db37d87d0fda5 1-42,45-55,75-102,126-137,142-158,171-198,225-230,260-282,294-300,310,319-431
+  s_55d378dab98863::t_6ec9a3f055914a 302-307
+  s_55d378dab98863::t_4d0b4f8f038bf3 43,159-170
+tests/mmm/test_campaign_media_integration.py
+  s_55d378dab98863::t_f68b6929b813cc 44,70-72
+  s_55d378dab98863::t_09daac4065d62d 181-242
+  s_55d378dab98863::t_c8435cf1c68013 243-249
+  s_55d378dab98863::t_79c6f73c6a3444 1-43,45-69,73-180
+tests/mmm/test_campaign_media.py
+  s_55d378dab98863::t_41617f710fee88 189-190,338-358
+  s_55d378dab98863::t_d5be0b18f0846d 129,139-188
+  s_55d378dab98863::t_31ea6e3ed3f172 1-20,22-128,130-138,191-200,202-203
+  s_55d378dab98863::t_29834d20381cf8 204-274
+  s_55d378dab98863::t_611fffd179f652 21,201
+  s_55d378dab98863::t_cdc33b7458fe20 275-337
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "471ed763b0aa830fb3e1a2138c8060b42319b9cb",
+  "prompts": {},
+  "sessions": {
+    "s_55d378dab98863": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d5b798c-e92f-4766-8486-4f7ec004fed0",
+        "model": "claude-fable-5"
+      },
+      "human_author": null
+    }
+  }
+}
