@@ -1,0 +1,27 @@
+pymc_marketing/mmm/budget_optimizer.py
+  s_aea6f3d4ec1e59::t_4ec3de3a180062 287,335-337,373-404,2171-2174,2294,2302
+pymc_marketing/mmm/constraints.py
+  s_aea6f3d4ec1e59::t_4ec3de3a180062 119
+tests/mmm/test_budget_optimizer.py
+  s_aea6f3d4ec1e59::t_87e56edd7389e2 697-698,706,708,716,723,725,727
+  s_aea6f3d4ec1e59::t_4ec3de3a180062 671-673,683,694-696,699-705,707,709-715,717-722,724,726,728
+  s_aea6f3d4ec1e59::t_682d404ed7e818 729-730
+docs/source/notebooks/mmm/mmm_multi_objective_optimization.ipynb
+  s_aea6f3d4ec1e59::t_095eec78d501fb 1683-1685,3354-3356
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "21b4e321cff84fd7928f9bf27eb690739352a836",
+  "prompts": {},
+  "sessions": {
+    "s_aea6f3d4ec1e59": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8261de5c-60fc-4f1a-97ca-633d28642e3a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
