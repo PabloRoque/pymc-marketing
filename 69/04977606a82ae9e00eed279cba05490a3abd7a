@@ -1,0 +1,24 @@
+tests/mmm/test_utility.py
+  s_aea6f3d4ec1e59::t_7274c211251a37 20,316-319,327-329,341-344
+  s_aea6f3d4ec1e59::t_7405fe135db620 29,312-315,320-326,330-338,345-348,350-355
+  s_aea6f3d4ec1e59::t_443959233c2ad7 339-340,349
+  s_aea6f3d4ec1e59::t_aecbb4466b003b 356-357
+pymc_marketing/mmm/utility.py
+  s_aea6f3d4ec1e59::t_a795cd30b50f59 596-600,607-608,610-611
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "6904977606a82ae9e00eed279cba05490a3abd7a",
+  "prompts": {},
+  "sessions": {
+    "s_aea6f3d4ec1e59": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8261de5c-60fc-4f1a-97ca-633d28642e3a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
