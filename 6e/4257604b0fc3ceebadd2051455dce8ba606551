@@ -1,0 +1,21 @@
+tests/test_pytensor_utils.py
+  s_09d51ac825dcbd::t_d30d09cf3d82a1 966-999
+pymc_marketing/pytensor_utils.py
+  s_09d51ac825dcbd::t_d30d09cf3d82a1 357-360,393,398-406
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "6e4257604b0fc3ceebadd2051455dce8ba606551",
+  "prompts": {},
+  "sessions": {
+    "s_09d51ac825dcbd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7130a007-0acc-4afc-a1cc-a474d1bd6d2b",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
