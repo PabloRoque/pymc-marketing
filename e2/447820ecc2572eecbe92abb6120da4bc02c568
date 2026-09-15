@@ -1,0 +1,27 @@
+tests/mmm/test_budget_optimizer.py
+  s_09d51ac825dcbd::t_76bd5f6e0e461f 1814-1815,1891-1953,1955-1989
+  s_09d51ac825dcbd::t_d0d7fb170141bf 1954
+tests/test_pytensor_utils.py
+  s_09d51ac825dcbd::t_76bd5f6e0e461f 914-916,919-956
+pymc_marketing/mmm/budget_optimizer.py
+  s_09d51ac825dcbd::t_3a74a7732a0aa2 2180-2189
+  s_09d51ac825dcbd::t_76bd5f6e0e461f 1483,1630,2128-2132,2179,2215-2222,2235-2236
+pymc_marketing/pytensor_utils.py
+  s_09d51ac825dcbd::t_76bd5f6e0e461f 270-272,385-387
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e2447820ecc2572eecbe92abb6120da4bc02c568",
+  "prompts": {},
+  "sessions": {
+    "s_09d51ac825dcbd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7130a007-0acc-4afc-a1cc-a474d1bd6d2b",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
