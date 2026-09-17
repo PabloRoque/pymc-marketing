@@ -1,0 +1,23 @@
+docs/source/notebooks/mmm/mmm_campaign_media.ipynb
+  s_72ec4d40483ea8::t_3555066bf8246e 83,166,776,783,805,836,850,856,903,910,932,963,977,1042,1108,1272,1459-1688,1703,1715,1763,1773,1787,1810,1827,1898,1957,2009-2037
+pymc_marketing/mmm/campaign_media.py
+  s_72ec4d40483ea8::t_d5c8f5cb643c60 244-253,256-259,276,524-527
+tests/mmm/test_campaign_media.py
+  s_72ec4d40483ea8::t_30d89d17c65a3d 324-351,371
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0a1e8d0a70a2eb2f45b962d24d9b6c359c5d3d4f",
+  "prompts": {},
+  "sessions": {
+    "s_72ec4d40483ea8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fcbc1fc5-d960-4547-8266-41f052974b76",
+        "model": "unknown"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
