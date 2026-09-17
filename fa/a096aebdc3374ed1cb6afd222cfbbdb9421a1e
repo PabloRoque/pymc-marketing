@@ -1,0 +1,19 @@
+tests/mmm/test_nested_media.py
+  s_33cccdfd38c01b::t_b39a8c0b15215d 408
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "faa096aebdc3374ed1cb6afd222cfbbdb9421a1e",
+  "prompts": {},
+  "sessions": {
+    "s_33cccdfd38c01b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_33cccdfd38c01b",
+        "model": "unknown"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
