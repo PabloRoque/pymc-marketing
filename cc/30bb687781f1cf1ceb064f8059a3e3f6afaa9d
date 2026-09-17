@@ -1,0 +1,19 @@
+docs/source/notebooks/mmm/mmm_campaign_media.ipynb
+  s_72ec4d40483ea8::t_c85762a54024b1 83,221,833,840,862,891,905,911,960,967,989,1018,1032,1109,1178,1386,1974-1976,1983-1986,1999-2004,2021,2080,2090-2114,2119-2121,2155,2160,2162,2168,2173-2187,2190-2254,2256-2270,2276-2379,2383-2394,2398-2401,2404,2406-2412,2414-2426,2447,2457,2474,2501,2519,2597,2656-2685
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "cc30bb687781f1cf1ceb064f8059a3e3f6afaa9d",
+  "prompts": {},
+  "sessions": {
+    "s_72ec4d40483ea8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fcbc1fc5-d960-4547-8266-41f052974b76",
+        "model": "unknown"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
