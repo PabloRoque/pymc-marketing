@@ -1,0 +1,24 @@
+pymc_marketing/mmm/distributions.py
+  s_72ec4d40483ea8::t_2f0d2d99d074b6 16-24,40,42-43,49,52-54,71-72,74-79,81,83-88,129-161,164-168,185,190,194-195,202,205-209,211-217,223,231-235,307,317,319-322,325,367-369
+  s_72ec4d40483ea8::t_928d1cff30b9ad 370,386-393,397,401,406
+tests/mmm/test_distributions.py
+  s_72ec4d40483ea8::t_6354a80d6cce78 109-111,488
+docs/source/notebooks/mmm/mmm_campaign_media.ipynb
+  s_72ec4d40483ea8::t_3af5ee1f02acf5 83,166,762,766-767,773-774,776,783,791,793,795-796,798,805,836,850,856,889,893-894,900-901,903,910,918,920,922-923,925,932,963,977,1042,1048,1108,1114,1192-1193,1199-1200,1209-1210,1272,1278,1387-1389,1395,1405-1406,1543,1550-1553,1590,1597,1603,1727,1740,1745-1746,1756
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "32b76617e2aea6eb16ae391932c4d1a5a4d9e5f3",
+  "prompts": {},
+  "sessions": {
+    "s_72ec4d40483ea8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fcbc1fc5-d960-4547-8266-41f052974b76",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
