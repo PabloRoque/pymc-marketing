@@ -1,0 +1,23 @@
+pymc_marketing/mmm/nested_media.py
+  s_72ec4d40483ea8::t_04745174e5a51d 32-37,79,89,155-159,161,164-172,176-194,197-198,328-335,357-359,362-374,376-380,400-401,611,618,623,627,631,635,713-714,716-718,720-727,729-736,784,798
+tests/mmm/test_nested_media.py
+  s_72ec4d40483ea8::t_7d90b93a9041a9 375-434,692
+tests/mmm/test_nested_media_integration.py
+  s_72ec4d40483ea8::t_11b3c10abb13fb 246-250,283-319,339,366-387
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "14ed852b03d5decab8320583dc844d1f7683a4fb",
+  "prompts": {},
+  "sessions": {
+    "s_72ec4d40483ea8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fcbc1fc5-d960-4547-8266-41f052974b76",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}

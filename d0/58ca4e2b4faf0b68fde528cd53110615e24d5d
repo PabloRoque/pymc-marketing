@@ -1,0 +1,23 @@
+docs/source/notebooks/mmm/mmm_campaign_media.ipynb
+  s_72ec4d40483ea8::t_5a3ec5cbe02b1d 83,166,776,783,805,814-816,818-822,824-834,836,850,856,903,910,932,941-943,945-949,951-961,963,977,1042,1108,1272,1543,1597,1678,1727,1740,1745-1746,1756
+pymc_marketing/mmm/campaign_media.py
+  s_72ec4d40483ea8::t_4635f0ae16215b 67,128-134,143-189,275,277-287,289,291-295,298-300,310-312,314,316-318,320-322,325,328-329,332,334-335,339-341,344-345,349-371,376-422,426-429,432-438,440,442-447,449,451-454,508-509
+tests/mmm/test_campaign_media.py
+  s_72ec4d40483ea8::t_a0e10d2810dfcf 161,203-204
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "d058ca4e2b4faf0b68fde528cd53110615e24d5d",
+  "prompts": {},
+  "sessions": {
+    "s_72ec4d40483ea8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fcbc1fc5-d960-4547-8266-41f052974b76",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}

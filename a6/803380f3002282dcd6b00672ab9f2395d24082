@@ -1,0 +1,27 @@
+docs/source/notebooks/mmm/mmm_campaign_media.ipynb
+  s_72ec4d40483ea8::t_c7038f5b6669ea 1391
+pymc_marketing/mmm/distributions.py
+  s_72ec4d40483ea8::t_8cfc3857a5d5a7 139-141
+pymc_marketing/mmm/nested_media.py
+  s_72ec4d40483ea8::t_eeb89eb2809a75 45-48,188-190,194-195,286-288,293
+tests/mmm/test_distributions.py
+  s_72ec4d40483ea8::t_e60d7c1b49ff65 491-504
+tests/mmm/test_nested_media.py
+  s_72ec4d40483ea8::t_db5df8da546918 344-374
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a6803380f3002282dcd6b00672ab9f2395d24082",
+  "prompts": {},
+  "sessions": {
+    "s_72ec4d40483ea8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fcbc1fc5-d960-4547-8266-41f052974b76",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+pymc_marketing/mmm/distributions.py
+  s_72ec4d40483ea8::t_01a27213c7155e 302,496-501
+pymc_marketing/mmm/nested_media.py
+  s_72ec4d40483ea8::t_ed79d255149870 56-66,603,818-819
+tests/mmm/test_distributions.py
+  s_72ec4d40483ea8::t_b5b913f6a5c396 514-519,542-550
+tests/mmm/test_nested_media.py
+  s_72ec4d40483ea8::t_92a3790964ca05 693-694,696-698,711
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "57901e8ab05fea5edaf9320d0c457438fabc1f92",
+  "prompts": {},
+  "sessions": {
+    "s_72ec4d40483ea8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fcbc1fc5-d960-4547-8266-41f052974b76",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
