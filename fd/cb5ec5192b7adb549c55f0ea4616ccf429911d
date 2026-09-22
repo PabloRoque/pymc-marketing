@@ -1,0 +1,25 @@
+pymc_marketing/mmm/__init__.py
+  s_72ec4d40483ea8::t_65d6d3137531b2 82,147
+pymc_marketing/mmm/lift_test.py
+  s_72ec4d40483ea8::t_873159233d52db 23,224,651
+pymc_marketing/mmm/mmm.py
+  s_72ec4d40483ea8::t_9cf3c78a6d5d9a 3625
+pymc_marketing/mmm/nested_media.py
+  s_72ec4d40483ea8::t_c4fb3be17e31fd 122,125-130,138-144,694,718
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "fdcb5ec5192b7adb549c55f0ea4616ccf429911d",
+  "prompts": {},
+  "sessions": {
+    "s_72ec4d40483ea8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fcbc1fc5-d960-4547-8266-41f052974b76",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "PabloRoque <pablo.deroque@glovoapp.com>"
+    }
+  }
+}
