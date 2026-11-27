@@ -166,7 +166,7 @@ class SCM:
                 condition_on=condition_on,
                 history_length=history_length,
             )
-            latents = Marginalization(self._roots)
+            latents = Marginalization(self._roots, context)
             # Only fitting integrates the latents out; other builds are generative
             fitting = not (simulate_latents or prediction)
             if fitting:
@@ -175,8 +175,6 @@ class SCM:
                 context.build(root)
             if fitting:
                 latents.build(context)
-            elif simulate_latents:
-                latents.check(context)
         return model, context
 
     def _training_model(

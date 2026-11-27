@@ -565,7 +565,6 @@ class _KalmanLikelihood:
             sigma = ptx.as_xtensor(np.asarray(obs.sigma, dtype="float64"), dims=())
         else:
             sigma = context.build(obs.sigma, name=f"{name}_sigma")
-        _check_scalar_sigma(sigma.dims, name)
         return sigma
 
 
@@ -665,7 +664,6 @@ def _observed_value(equation: Equation, context: BuildContext) -> Any:
     equation never depends on them.
     """
     binding = context.register_equation(equation)
-    _check_date_only(binding)
     return context._observations(binding)
 
 
@@ -699,22 +697,32 @@ class Marginalization:
     Fitting integrates every latent out: the equations observing it build to their
     observations, and its joint likelihood is built after the rest of the model.
     Prior predictive sampling instead draws the latents forward when the equations
-    reach them, so only the checks apply. The checks run on construction, in both
-    cases, and ``check`` runs the ones that need the built model, so a prior
-    predictive check refuses what fitting would refuse.
+    reach them, so only the checks apply. The checks run on construction, in every
+    build, so a prior predictive check refuses what fitting would refuse.
 
     Parameters
     ----------
     roots : sequence of Equation
         The SCM's equations.
+    context : BuildContext
+        The build, whose data index the equations and whose terms give a sigma.
     """
 
-    def __init__(self, roots: Sequence[Equation]) -> None:
+    def __init__(self, roots: Sequence[Equation], context: BuildContext) -> None:
         nodes = list(walk(roots))
         self._likelihoods = _plan(
             [node for node in nodes if isinstance(node, Equation)],
             [node for node in nodes if isinstance(node, LatentStateSpace)],
         )
+        for likelihood in self._likelihoods:
+            for obs in likelihood.observations:
+                binding = context.binding(obs.equation)
+                _check_date_only(binding)
+                # Sigmas known without building were checked when planning; a term is
+                # built once here and reused by the equation's own build
+                if _static_sigma_dims(obs.sigma) is None:
+                    sigma = context.build(obs.sigma, name=f"{binding.name}_sigma")
+                    _check_scalar_sigma(sigma.dims, binding.name)
 
     def attach(self, context: BuildContext) -> None:
         """Make the observing equations build to their observations in ``context``."""
@@ -730,18 +738,3 @@ class Marginalization:
         """Add each latent's joint likelihood; call after building the equations."""
         for likelihood in self._likelihoods:
             likelihood.build(context)
-
-    def check(self, context: BuildContext) -> None:
-        """Refuse what ``build`` would refuse, in a build that draws the latents forward.
-
-        Call after building the equations, so a sigma term is already built.
-        Sigmas whose dims are known without building were checked on
-        construction.
-        """
-        for likelihood in self._likelihoods:
-            for obs in likelihood.observations:
-                binding = context.binding(obs.equation)
-                _check_date_only(binding)
-                if _static_sigma_dims(obs.sigma) is None:
-                    sigma = context.build(obs.sigma, name=f"{binding.name}_sigma")
-                    _check_scalar_sigma(sigma.dims, binding.name)
